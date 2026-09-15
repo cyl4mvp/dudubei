@@ -201,7 +201,26 @@
   .btn-primary-sm { background: #FF6B8A; color: #fff; }
   .step-list { font-size: 12px; color: #666; line-height: 1.8; padding-left: 16px; }
   .step-list li { margin-bottom: 4px; }
-  .pull-refresh {
+  .calendar-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #fff; border-radius: 12px; margin-bottom: 12px; }
+.cal-nav { background: none; border: none; font-size: 18px; cursor: pointer; color: #FF6B8A; padding: 8px 12px; }
+#calMonthTitle { font-size: 16px; font-weight: bold; color: #333; }
+.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; background: #fff; border-radius: 12px; padding: 8px; }
+.cal-day-name { text-align: center; font-size: 12px; color: #999; padding: 8px 0; font-weight: bold; }
+.cal-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 8px; cursor: pointer; font-size: 14px; position: relative; padding: 2px; }
+.cal-day:hover { background: #f0f0f0; }
+.cal-day.today { background: #FF6B8A; color: #fff; }
+.cal-day.selected { background: #FFE0E6; color: #FF6B8A; font-weight: bold; }
+.cal-day.other-month { color: #ccc; }
+.cal-day .cal-data { font-size: 9px; color: #999; line-height: 1.2; margin-top: 2px; }
+.cal-day.today .cal-data { color: #fff; }
+.cal-day.has-data::after { content: ""; position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; border-radius: 50%; background: #FF6B8A; }
+.cal-day.today.has-data::after { background: #fff; }
+.last-time { display: flex; gap: 12px; margin: 12px 16px; }
+.last-item { flex: 1; background: #fff; border-radius: 12px; padding: 12px; display: flex; align-items: center; gap: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+.last-icon { font-size: 20px; }
+.last-text { font-size: 13px; color: #333; line-height: 1.4; }
+.last-text .time-ago { color: #FF6B8A; font-weight: bold; font-size: 15px; }
+.pull-refresh {
     text-align: center; padding: 12px; font-size: 12px; color: #FF6B8A;
     cursor: pointer;
   }
@@ -215,7 +234,7 @@
 <body>
 
 <div class="header">
-  <h1>嘟嘟贝干饭日记 👶</h1>
+  <h1>嘟嘟贝干饭日记 👧</h1>
   <div class="sub">
     <span id="todayDate"></span>
     <span class="baby-age" id="babyAge"></span>
@@ -236,15 +255,36 @@
   <div class="stat"><div class="num diaper" id="diaperCount">0</div><div class="label">换片次数</div></div>
 </div>
 
+<div class="last-time">
+  <div class="last-item">
+    <span class="last-icon">🍼</span>
+    <span class="last-text" id="lastFeed">上次喂奶：--</span>
+  </div>
+  <div class="last-item">
+    <span class="last-icon">🩲</span>
+    <span class="last-text" id="lastDiaper">上次换片：--</span>
+  </div>
+</div>
+
 <div class="pull-refresh" onclick="pullFromCloud()" id="pullRefresh" style="display:none;">↓ 点击从云端同步最新数据</div>
 
 <div class="tab-bar">
   <div class="tab active" data-tab="today" onclick="switchTab('today')">今日记录</div>
+  <div class="tab" data-tab="calendar" onclick="switchTab('calendar')">日历</div>
   <div class="tab" data-tab="history" onclick="switchTab('history')">趋势图</div>
 </div>
 
 <div class="section" id="todayPanel">
   <div class="record-list" id="todayList"></div>
+</div>
+<div class="section" id="calendarPanel" style="display:none;">
+  <div class="calendar-header">
+    <button class="cal-nav" onclick="changeMonth(-1)">◀</button>
+    <span id="calMonthTitle"></span>
+    <button class="cal-nav" onclick="changeMonth(1)">▶</button>
+  </div>
+  <div class="calendar-grid" id="calendarGrid"></div>
+  <div id="calDayDetail" style="margin-top:16px;"></div>
 </div>
 <div class="section" id="historyPanel" style="display:none;">
   <div style="background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;">
@@ -258,7 +298,7 @@
 
 <div class="bottom-bar">
   <button class="btn btn-feed" onclick="openModal('feed')">🍼 记录喂奶</button>
-  <button class="btn btn-diaper" onclick="openModal('diaper')">👶 换尿布</button>
+  <button class="btn btn-diaper" onclick="openModal('diaper')">🩲 换尿布</button>
 </div>
 
 <!-- 记录弹窗 -->
@@ -345,6 +385,7 @@ const BIRTH_DATE = '2026-09-11T00:30:00';
 const SUPABASE_URL = 'https://vaovpnqfslxytuszgtdb.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_qKiglG7EjF_v7-MY9nQ4QQ_41ddkmhC';
 let currentType = 'feed', currentMilkType = 'breast', currentHasPoop = false, currentPhoto = null;
+let calYear = 0, calMonth = 0, calSelectedDay = null;
 let cloudEnabled = false;
 
 /* ========== 本地存储 ========== */
@@ -496,7 +537,7 @@ function getBabyAge() {
 /* ========== 渲染 ========== */
 function getRecordIcon(r) {
   if (r.type === 'feed') return r.milkType === 'breast' ? '🤱' : '🍼';
-  return r.hasPoop ? '💩' : '👶';
+  return r.hasPoop ? '💩' : '🩲';
 }
 function getRecordIconClass(r) {
   if (r.type === 'feed') return r.milkType;
@@ -507,6 +548,33 @@ function getRecordTypeName(r) {
   return r.hasPoop ? '换尿布(有粑粑)' : '换尿布';
 }
 
+function timeAgo(dateStr) {
+  const then = new Date(dateStr.replace(' ', 'T'));
+  const now = new Date();
+  let diff = Math.floor((now - then) / 1000);
+  if (diff < 60) return diff + '秒前';
+  if (diff < 3600) return Math.floor(diff/60) + '分钟前';
+  if (diff < 86400) return Math.floor(diff/3600) + '小时' + Math.floor((diff%3600)/60) + '分前';
+  return Math.floor(diff/86400) + '天前';
+}
+function updateLastTime(records) {
+  const feeds = records.filter(r => r.type==='feed').sort((a,b) => b.time.localeCompare(a.time));
+  const diapers = records.filter(r => r.type==='diaper').sort((a,b) => b.time.localeCompare(a.time));
+  if (feeds.length > 0) {
+    const f = feeds[0];
+    const type = f.milkType==='breast'?'母乳':'奶粉';
+    document.getElementById('lastFeed').innerHTML = `<span class="time-ago">${timeAgo(f.time)}</span><br>${type} ${f.amount}ml`;
+  } else {
+    document.getElementById('lastFeed').textContent = '暂无记录';
+  }
+  if (diapers.length > 0) {
+    const d = diapers[0];
+    const poop = d.hasPoop?'（含粑粑）':'';
+    document.getElementById('lastDiaper').innerHTML = `<span class="time-ago">${timeAgo(d.time)}</span><br>换尿片${poop}`;
+  } else {
+    document.getElementById('lastDiaper').textContent = '暂无记录';
+  }
+}
 function render() {
   const records = loadLocal();
   const today = formatDate(new Date());
@@ -524,6 +592,9 @@ function render() {
   document.getElementById('breastTotal').textContent = bt;
   document.getElementById('formulaTotal').textContent = ft;
   document.getElementById('diaperCount').textContent = dc;
+
+  // 距上次计算
+  updateLastTime(records);
 
   const list = document.getElementById('todayList');
   list.innerHTML = todayRecords.length === 0
@@ -679,14 +750,97 @@ function renderHistory(records) {
 function switchTab(tab) {
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab===tab));
   document.getElementById('todayPanel').style.display = tab==='today' ? 'block' : 'none';
+  document.getElementById('calendarPanel').style.display = tab==='calendar' ? 'block' : 'none';
   document.getElementById('historyPanel').style.display = tab==='history' ? 'block' : 'none';
   if (tab==='history') renderHistory(loadLocal());
+  if (tab==='calendar') { if(calYear===0){const n=new Date();calYear=n.getFullYear();calMonth=n.getMonth();} renderCalendar(); }
+}
+function changeMonth(delta) {
+  calMonth += delta;
+  if (calMonth < 0) { calMonth = 11; calYear--; }
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  renderCalendar();
+}
+function renderCalendar() {
+  const records = loadLocal();
+  const groups = {};
+  records.forEach(r => {
+    const d = (r.time || '').split('T')[0].split(' ')[0];
+    if (!d) return;
+    if (!groups[d]) groups[d] = {bt:0,ft:0,dc:0,pc:0,items:[]};
+    if (r.type==='feed') {
+      if (r.milkType==='breast') groups[d].bt+=Number(r.amount)||0;
+      else groups[d].ft+=Number(r.amount)||0;
+    } else { groups[d].dc++; if(r.hasPoop) groups[d].pc++; }
+    groups[d].items.push(r);
+  });
+  
+  document.getElementById('calMonthTitle').textContent = calYear + '年' + (calMonth+1) + '月';
+  
+  const firstDay = new Date(calYear, calMonth, 1).getDay();
+  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+  const daysInPrevMonth = new Date(calYear, calMonth, 0).getDate();
+  const today = formatDate(new Date());
+  
+  let html = ['日','一','二','三','四','五','六'].map(d => `<div class="cal-day-name">${d}</div>`).join('');
+  
+  // 上月填充
+  for (let i = firstDay-1; i >= 0; i--) {
+    html += `<div class="cal-day other-month">${daysInPrevMonth-i}</div>`;
+  }
+  // 当月
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const g = groups[dateStr];
+    const isToday = dateStr === today;
+    const isSelected = dateStr === calSelectedDay;
+    const hasData = g && g.items.length > 0;
+    let dataStr = '';
+    if (g && g.items.length > 0) {
+      const hasFeed = g.bt + g.ft > 0;
+      const hasDiaper = g.dc > 0;
+      const hasPoop = g.pc > 0;
+      let icons = [];
+      if (hasFeed) icons.push('🍼');
+      if (hasDiaper) icons.push(hasPoop ? '💩' : '🩲');
+      dataStr = `<div class="cal-data" style="font-size:11px;">${icons.join(' ')}</div>`;
+    }
+    html += `<div class="cal-day ${isToday?'today':''} ${isSelected?'selected':''} ${hasData?'has-data':''}" onclick="selectDay('${dateStr}')">${d}${dataStr}</div>`;
+  }
+  // 下月填充
+  const totalCells = firstDay + daysInMonth;
+  const remaining = (7 - totalCells % 7) % 7;
+  for (let i = 1; i <= remaining; i++) {
+    html += `<div class="cal-day other-month">${i}</div>`;
+  }
+  
+  document.getElementById('calendarGrid').innerHTML = html;
+  
+  // 显示选中日期详情
+  if (calSelectedDay && groups[calSelectedDay]) {
+    const g = groups[calSelectedDay];
+    document.getElementById('calDayDetail').innerHTML = `
+      <div class="day-group">
+        <div class="day-header"><span>${calSelectedDay}</span>
+          <span class="day-summary">母乳${g.bt}ml · 奶粉${g.ft}ml<br>粑粑${g.pc}次 · 换片${g.dc}次</span>
+        </div>
+        <div class="record-list">${g.items.sort((a,b)=>b.time.localeCompare(a.time)).map(renderRecordItem).join('')}</div>
+      </div>`;
+  } else if (calSelectedDay) {
+    document.getElementById('calDayDetail').innerHTML = `<div class="empty"><div class="icon">📝</div>${calSelectedDay} 没有记录</div>`;
+  } else {
+    document.getElementById('calDayDetail').innerHTML = '';
+  }
+}
+function selectDay(dateStr) {
+  calSelectedDay = dateStr;
+  renderCalendar();
 }
 
 /* ========== 记录弹窗 ========== */
 function openModal(type) {
   currentType = type; currentMilkType = 'breast'; currentHasPoop = false; currentPhoto = null;
-  document.getElementById('modalTitle').textContent = type==='feed' ? '记录喂奶 🍼' : '换尿布 👶';
+  document.getElementById('modalTitle').textContent = type==='feed' ? '记录喂奶 🍼' : '换尿布 🩲';
   document.getElementById('milkTypeGroup').style.display = type==='feed' ? 'block' : 'none';
   document.getElementById('amountGroup').style.display = type==='feed' ? 'block' : 'none';
   document.getElementById('poopGroup').style.display = type==='diaper' ? 'block' : 'none';
@@ -794,6 +948,7 @@ async function delRecord(id) {
   render();
   initCloud();
   setInterval(() => { if (cloudEnabled) pullFromCloud(true); }, 30000);
+  setInterval(() => { updateLastTime(loadLocal()); }, 60000);
 })();
 </script>
 </body>
