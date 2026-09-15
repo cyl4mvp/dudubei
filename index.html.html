@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>嘟嘟贝干饭日记</title>
+<link rel="apple-touch-icon" href="data:image/png;base64,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">
+<link rel="icon" type="image/png" href="data:image/png;base64,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">
+<meta name="theme-color" content="#FF6B8A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="嘟嘟贝">
+
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #FFF5F5;
+    color: #333;
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    padding-bottom: 100px;
+  }
+  .header {
+    background: linear-gradient(135deg, #FF8FA3 0%, #FF6B8A 100%);
+    color: #fff;
+    padding: 28px 20px 20px;
+    border-radius: 0 0 24px 24px;
+    position: relative;
+  }
+  .header h1 { font-size: 20px; font-weight: 700; }
+  .header .sub { font-size: 13px; opacity: 0.9; margin-top: 6px; display: flex; justify-content: space-between; align-items: center; }
+  .baby-age {
+    background: rgba(255,255,255,0.2);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .sync-btn {
+    position: absolute; top: 24px; right: 16px;
+    background: rgba(255,255,255,0.2); border: none;
+    color: #fff; font-size: 18px; width: 36px; height: 36px;
+    border-radius: 50%; cursor: pointer; display: flex;
+    align-items: center; justify-content: center;
+  }
+  .sync-status {
+    font-size: 11px; opacity: 0.85; margin-top: 4px;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .sync-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+  .sync-dot.local { background: #ffd700; }
+  .sync-dot.cloud { background: #00e676; }
+  .sync-dot.syncing { background: #fff; animation: blink 1s infinite; }
+  @keyframes blink { 50% { opacity: 0.3; } }
+  .stats {
+    background: #fff;
+    margin: -14px 16px 0;
+    border-radius: 16px;
+    padding: 16px 8px;
+    box-shadow: 0 4px 16px rgba(255,107,138,0.12);
+    position: relative; z-index: 2;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px 0;
+  }
+  .stat { text-align: center; }
+  .stat + .stat { border-left: 1px solid #f5f5f5; }
+  .stat:nth-child(4) { border-left: none; }
+  .stat .num { font-size: 22px; font-weight: 700; }
+  .stat .num.breast { color: #FF6B8A; }
+  .stat .num.formula { color: #FF9F43; }
+  .stat .num.poop { color: #8B5E3C; }
+  .stat .num.diaper { color: #5B9BD5; }
+  .stat .label { font-size: 11px; color: #999; margin-top: 2px; }
+  .section { padding: 16px 16px 0; }
+  .record-list { background: #fff; border-radius: 16px; overflow: hidden; }
+  .record-item {
+    display: flex; align-items: center;
+    padding: 12px 16px; border-bottom: 1px solid #f5f5f5;
+  }
+  .record-item:last-child { border-bottom: none; }
+  .record-icon {
+    width: 38px; height: 38px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; margin-right: 10px; flex-shrink: 0;
+  }
+  .record-icon.breast { background: #FFF0F3; }
+  .record-icon.formula { background: #FFF3E6; }
+  .record-icon.diaper { background: #EDF4FC; }
+  .record-icon.poop { background: #F5EDE4; }
+  .record-info { flex: 1; min-width: 0; }
+  .record-type { font-size: 14px; font-weight: 600; }
+  .record-type .tag {
+    font-size: 10px; padding: 2px 6px; border-radius: 4px;
+    margin-left: 6px; font-weight: 500; vertical-align: middle;
+  }
+  .tag.breast { background: #FFE4EA; color: #FF6B8A; }
+  .tag.formula { background: #FFEED6; color: #FF9F43; }
+  .tag.poop { background: #EFE3D6; color: #8B5E3C; }
+  .record-time { font-size: 12px; color: #999; margin-top: 2px; }
+  .record-amount { font-size: 15px; font-weight: 700; color: #FF6B8A; margin-right: 8px; white-space: nowrap; }
+  .record-del {
+    font-size: 12px; color: #ccc; padding: 6px 8px;
+    border: none; background: none; cursor: pointer; flex-shrink: 0;
+  }
+  .empty { text-align: center; padding: 40px 0; color: #aaa; font-size: 14px; }
+  .empty .icon { font-size: 40px; margin-bottom: 8px; }
+  .bottom-bar {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 480px;
+    display: flex; gap: 10px; padding: 12px 16px;
+    background: rgba(255,245,245,0.95);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid #f0e0e0;
+  }
+  .btn {
+    flex: 1; padding: 14px 0; border: none; border-radius: 12px;
+    font-size: 15px; font-weight: 600; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .btn-feed { background: linear-gradient(135deg, #FF8FA3, #FF6B8A); color: #fff; }
+  .btn-diaper { background: linear-gradient(135deg, #7CB9E8, #5B9BD5); color: #fff; }
+  .btn:active { opacity: 0.85; }
+  .modal-mask {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+    z-index: 100; align-items: flex-end; justify-content: center;
+  }
+  .modal-mask.show { display: flex; }
+  .modal {
+    background: #fff; width: 100%; max-width: 480px;
+    border-radius: 20px 20px 0 0; padding: 24px 20px 32px;
+    animation: slideUp 0.25s ease;
+    max-height: 85vh; overflow-y: auto;
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .modal h3 { font-size: 18px; margin-bottom: 20px; text-align: center; }
+  .form-group { margin-bottom: 18px; }
+  .form-group label { display: block; font-size: 13px; color: #666; margin-bottom: 8px; }
+  .form-group input {
+    width: 100%; padding: 12px 14px; border: 1px solid #e0e0e0;
+    border-radius: 10px; font-size: 15px; outline: none;
+  }
+  .form-group input:focus { border-color: #FF6B8A; }
+  .type-selector { display: flex; gap: 10px; }
+  .type-option {
+    flex: 1; padding: 12px 0; text-align: center;
+    border: 2px solid #e0e0e0; border-radius: 10px;
+    font-size: 14px; cursor: pointer; color: #999; font-weight: 500;
+  }
+  .type-option.active.breast { border-color: #FF6B8A; background: #FFF0F3; color: #FF6B8A; font-weight: 600; }
+  .type-option.active.formula { border-color: #FF9F43; background: #FFF3E6; color: #FF9F43; font-weight: 600; }
+  .type-option.active.poop-yes { border-color: #8B5E3C; background: #F5EDE4; color: #8B5E3C; font-weight: 600; }
+  .type-option.active.poop-no { border-color: #5B9BD5; background: #EDF4FC; color: #5B9BD5; font-weight: 600; }
+  .quick-amounts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .quick-tag {
+    padding: 6px 14px; background: #f5f5f5; border-radius: 20px;
+    font-size: 13px; color: #666; cursor: pointer; border: none;
+  }
+  .quick-tag.active { background: #FFE4EA; color: #FF6B8A; font-weight: 600; }
+  .photo-upload { border: 2px dashed #ddd; border-radius: 12px; padding: 20px; text-align: center; color: #999; cursor: pointer; background: #fafafa; }
+.photo-upload:active { background: #f0f0f0; }
+.btn-clear-photo { background: #ff6b6b; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+.record-photo { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; margin-left: 8px; cursor: pointer; }
+.modal-actions { display: flex; gap: 10px; margin-top: 24px; }
+  .modal-actions button {
+    flex: 1; padding: 13px 0; border-radius: 10px; font-size: 15px;
+    font-weight: 600; border: none; cursor: pointer;
+  }
+  .btn-cancel { background: #f0f0f0; color: #666; }
+  .btn-confirm { background: linear-gradient(135deg, #FF8FA3, #FF6B8A); color: #fff; }
+  .day-group { margin-bottom: 16px; }
+  .day-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 4px; font-size: 13px; color: #666; font-weight: 600;
+  }
+  .day-summary { font-size: 11px; color: #999; font-weight: 400; line-height: 1.6; text-align: right; }
+  .tab-bar {
+    display: flex; background: #fff; margin: 16px; border-radius: 12px;
+    padding: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  .tab {
+    flex: 1; text-align: center; padding: 10px 0; font-size: 14px;
+    color: #999; border-radius: 8px; cursor: pointer; font-weight: 500;
+  }
+  .tab.active { background: #FFE4EA; color: #FF6B8A; font-weight: 600; }
+  #trendChart { width: 100%; height: 200px; display: block; }
+.hint { text-align: center; font-size: 11px; color: #bbb; padding: 12px; }
+  .settings-section { margin-bottom: 20px; }
+  .settings-section h4 { font-size: 14px; color: #333; margin-bottom: 10px; }
+  .settings-desc { font-size: 12px; color: #999; line-height: 1.6; margin-bottom: 12px; }
+  .sync-code-box {
+    background: #f8f8f8; border-radius: 8px; padding: 12px;
+    font-size: 12px; color: #666; word-break: break-all;
+    font-family: monospace; margin-bottom: 10px;
+  }
+  .btn-small {
+    padding: 8px 16px; font-size: 13px; border-radius: 8px;
+    border: none; cursor: pointer; font-weight: 500;
+  }
+  .btn-outline { background: #fff; border: 1px solid #ddd; color: #666; }
+  .btn-primary-sm { background: #FF6B8A; color: #fff; }
+  .step-list { font-size: 12px; color: #666; line-height: 1.8; padding-left: 16px; }
+  .step-list li { margin-bottom: 4px; }
+  .pull-refresh {
+    text-align: center; padding: 12px; font-size: 12px; color: #FF6B8A;
+    cursor: pointer;
+  }
+  .warn-box {
+    background: #FFF8E1; border: 1px solid #FFE082; border-radius: 8px;
+    padding: 10px 12px; font-size: 12px; color: #F57F17; margin-bottom: 12px;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>嘟嘟贝干饭日记 👶</h1>
+  <div class="sub">
+    <span id="todayDate"></span>
+    <span class="baby-age" id="babyAge"></span>
+  </div>
+  <div class="sync-status" id="syncStatus">
+    <span class="sync-dot local"></span>
+    <span id="syncStatusText">本地模式（点⚙️开启云同步）</span>
+  </div>
+  <button class="sync-btn" onclick="openSettings()" title="设置">⚙️</button>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="num breast" id="breastCount">0</div><div class="label">母乳次数</div></div>
+  <div class="stat"><div class="num formula" id="formulaCount">0</div><div class="label">奶粉次数</div></div>
+  <div class="stat"><div class="num poop" id="poopCount">0</div><div class="label">粑粑次数</div></div>
+  <div class="stat"><div class="num breast" id="breastTotal">0</div><div class="label">母乳总量(ml)</div></div>
+  <div class="stat"><div class="num formula" id="formulaTotal">0</div><div class="label">奶粉总量(ml)</div></div>
+  <div class="stat"><div class="num diaper" id="diaperCount">0</div><div class="label">换片次数</div></div>
+</div>
+
+<div class="pull-refresh" onclick="pullFromCloud()" id="pullRefresh" style="display:none;">↓ 点击从云端同步最新数据</div>
+
+<div class="tab-bar">
+  <div class="tab active" data-tab="today" onclick="switchTab('today')">今日记录</div>
+  <div class="tab" data-tab="history" onclick="switchTab('history')">趋势图</div>
+</div>
+
+<div class="section" id="todayPanel">
+  <div class="record-list" id="todayList"></div>
+</div>
+<div class="section" id="historyPanel" style="display:none;">
+  <div style="background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;">
+    <h4 style="margin-bottom:12px;color:#333;">📈 每日趋势</h4>
+    <canvas id="trendChart" height="220"></canvas>
+  </div>
+  <div id="historyList"></div>
+</div>
+
+<div class="hint">开启云同步后数据存在腾讯云，多人共享不丢失</div>
+
+<div class="bottom-bar">
+  <button class="btn btn-feed" onclick="openModal('feed')">🍼 记录喂奶</button>
+  <button class="btn btn-diaper" onclick="openModal('diaper')">👶 换尿布</button>
+</div>
+
+<!-- 记录弹窗 -->
+<div class="modal-mask" id="modalMask" onclick="closeModalMask(event)">
+  <div class="modal">
+    <h3 id="modalTitle">记录喂奶</h3>
+    <div class="form-group" id="milkTypeGroup">
+      <label>奶型</label>
+      <div class="type-selector">
+        <div class="type-option breast active" id="optBreast" onclick="setMilkType('breast')">🤱 母乳</div>
+        <div class="type-option formula" id="optFormula" onclick="setMilkType('formula')">🍼 奶粉</div>
+      </div>
+    </div>
+    <div class="form-group" id="amountGroup">
+      <label>剂量 (ml)</label>
+      <input type="number" id="amountInput" placeholder="请输入奶量" inputmode="numeric">
+      <div class="quick-amounts">
+        <button class="quick-tag" onclick="setAmount(30,event)">30ml</button>
+        <button class="quick-tag" onclick="setAmount(60,event)">60ml</button>
+        <button class="quick-tag" onclick="setAmount(90,event)">90ml</button>
+        <button class="quick-tag" onclick="setAmount(120,event)">120ml</button>
+        <button class="quick-tag" onclick="setAmount(150,event)">150ml</button>
+        <button class="quick-tag" onclick="setAmount(180,event)">180ml</button>
+      </div>
+    </div>
+    <div class="form-group" id="poopGroup" style="display:none;">
+      <label>是否有粑粑</label>
+      <div class="type-selector">
+        <div class="type-option poop-no active" id="optPoopNo" onclick="setPoop(false)">💧 只有小便</div>
+        <div class="type-option poop-yes" id="optPoopYes" onclick="setPoop(true)">💩 有粑粑</div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>时间</label>
+      <input type="datetime-local" id="timeInput">
+    </div>
+    <div class="form-group">
+      <label>备注（可选）</label>
+      <input type="text" id="noteInput" placeholder="如：量多/量少、颜色等">
+    </div>
+    <div class="form-group">
+      <label>图片（可选）</label>
+      <div class="photo-upload" onclick="document.getElementById('photoInput').click()">
+        <span id="photoPlaceholder">📷 点击拍照或选图</span>
+        <img id="photoPreview" style="display:none;max-width:100%;border-radius:8px;">
+      </div>
+      <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none;" onchange="handlePhoto(event)">
+      <button class="btn-clear-photo" id="clearPhotoBtn" style="display:none;margin-top:8px;" onclick="clearPhoto()">清除图片</button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">取消</button>
+      <button class="btn-confirm" onclick="saveRecord()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 设置弹窗 -->
+<div class="modal-mask" id="settingsMask" onclick="closeSettingsMask(event)">
+  <div class="modal">
+    <h3>⚙️ 云同步设置</h3>
+
+    <div class="settings-section">
+      <h4>云同步状态</h4>
+      <p class="settings-desc">数据已自动同步到云端，你和家人打开同一个HTML文件即可共享记录。</p>
+      <p class="settings-desc" style="margin-top:8px; color:#27ae60;">✅ 云同步已开启 · Supabase云端存储</p>
+    </div>
+
+    <div class="settings-section">
+      <h4>家人如何加入？</h4>
+      <p class="settings-desc">把这个HTML文件发给家人，他们打开后记录的数据会自动和你同步，无需任何配置。</p>
+    </div>
+
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeSettings()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const LOCAL_KEY = 'baby_care_records_v2';
+const CONFIG_KEY = 'baby_cloud_config_v3';
+const BIRTH_DATE = '2026-09-11T00:30:00';
+const SUPABASE_URL = 'https://vaovpnqfslxytuszgtdb.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_qKiglG7EjF_v7-MY9nQ4QQ_41ddkmhC';
+let currentType = 'feed', currentMilkType = 'breast', currentHasPoop = false, currentPhoto = null;
+let cloudEnabled = false;
+
+/* ========== 本地存储 ========== */
+function loadLocal() { return JSON.parse(localStorage.getItem(LOCAL_KEY) || '[]'); }
+function saveLocal(records) { localStorage.setItem(LOCAL_KEY, JSON.stringify(records)); }
+function loadConfig() {
+  try { return JSON.parse(localStorage.getItem(CONFIG_KEY) || 'null'); }
+  catch(e) { return null; }
+}
+function saveConfig(cfg) { localStorage.setItem(CONFIG_KEY, JSON.stringify(cfg)); }
+
+/* ========== Supabase 云同步 ========== */
+async function initCloud() {
+  try {
+    cloudEnabled = true;
+    updateSyncStatus();
+    pullFromCloud(true);
+  } catch(e) {
+    console.error('云初始化失败', e);
+    cloudEnabled = false;
+    updateSyncStatus();
+  }
+}
+
+function updateSyncStatus() {
+  const dot = document.querySelector('#syncStatus .sync-dot');
+  const text = document.getElementById('syncStatusText');
+  const pull = document.getElementById('pullRefresh');
+  if (cloudEnabled) {
+    dot.className = 'sync-dot cloud';
+    text.textContent = '云同步已开启 · 数据实时共享';
+    pull.style.display = 'block';
+  } else {
+    dot.className = 'sync-dot local';
+    text.textContent = '本地模式';
+    pull.style.display = 'none';
+  }
+}
+
+function setSyncing(isSyncing) {
+  const dot = document.querySelector('#syncStatus .sync-dot');
+  const text = document.getElementById('syncStatusText');
+  if (isSyncing) {
+    dot.className = 'sync-dot syncing';
+    text.textContent = '同步中...';
+  } else {
+    updateSyncStatus();
+  }
+}
+
+async function pushToCloud(records) {
+  if (!cloudEnabled) return;
+  try {
+    setSyncing(true);
+    const headers = {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal'
+    };
+    // 先查询是否已有记录
+    const queryRes = await fetch(SUPABASE_URL + '/rest/v1/baby_data?type=eq.shared&select=id', {
+      method: 'GET',
+      headers: headers
+    });
+    const existing = await queryRes.json();
+    if (existing && existing.length > 0) {
+      await fetch(SUPABASE_URL + '/rest/v1/baby_data?id=eq.' + existing[0].id, {
+        method: 'PATCH',
+        headers: headers,
+        body: JSON.stringify({ records })
+      });
+    } else {
+      await fetch(SUPABASE_URL + '/rest/v1/baby_data', {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({ type: 'shared', records })
+      });
+    }
+    setSyncing(false);
+  } catch(e) {
+    console.error('上传失败', e);
+    setSyncing(false);
+  }
+}
+
+async function pullFromCloud(silent) {
+  if (!cloudEnabled) {
+    if (!silent) alert('云同步未开启');
+    return;
+  }
+  try {
+    setSyncing(true);
+    const headers = {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY
+    };
+    const res = await fetch(SUPABASE_URL + '/rest/v1/baby_data?type=eq.shared', {
+      method: 'GET',
+      headers: headers
+    });
+    const data = await res.json();
+    if (data && data.length > 0 && data[0].records) {
+      saveLocal(data[0].records);
+      render();
+    }
+    setSyncing(false);
+    if (!silent) alert('已同步最新数据');
+  } catch(e) {
+    console.error('拉取失败', e);
+    setSyncing(false);
+    if (!silent) alert('同步失败，请检查网络');
+  }
+}
+
+/* ========== 设置弹窗 ========== */
+function openSettings() {
+  document.getElementById('settingsMask').classList.add('show');
+}
+function closeSettings() { document.getElementById('settingsMask').classList.remove('show'); }
+function closeSettingsMask(e) { if (e.target === document.getElementById('settingsMask')) closeSettings(); }
+function copySyncCode() {
+  const code = document.getElementById('syncCodeBox').textContent;
+  const ta = document.createElement('textarea');
+  ta.value = code; document.body.appendChild(ta); ta.select();
+  document.execCommand('copy'); document.body.removeChild(ta);
+  alert('环境ID已复制，发给家人即可');
+}
+
+/* ========== 工具函数 ========== */
+function formatDate(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function nowLocalInput() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}T${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+function getBabyAge() {
+  const diffDays = Math.floor((new Date() - new Date(BIRTH_DATE)) / (1000*60*60*24));
+  if (diffDays < 30) return `出生第${diffDays + 1}天`;
+  if (diffDays < 365) {
+    const m = Math.floor(diffDays/30), d = diffDays%30;
+    return d > 0 ? `${m}个月${d}天` : `${m}个月`;
+  }
+  const y = Math.floor(diffDays/365), m = Math.floor((diffDays%365)/30);
+  return m > 0 ? `${y}岁${m}个月` : `${y}岁`;
+}
+
+/* ========== 渲染 ========== */
+function getRecordIcon(r) {
+  if (r.type === 'feed') return r.milkType === 'breast' ? '🤱' : '🍼';
+  return r.hasPoop ? '💩' : '👶';
+}
+function getRecordIconClass(r) {
+  if (r.type === 'feed') return r.milkType;
+  return r.hasPoop ? 'poop' : 'diaper';
+}
+function getRecordTypeName(r) {
+  if (r.type === 'feed') return r.milkType === 'breast' ? '母乳' : '奶粉';
+  return r.hasPoop ? '换尿布(有粑粑)' : '换尿布';
+}
+
+function render() {
+  const records = loadLocal();
+  const today = formatDate(new Date());
+  const todayRecords = records.filter(r => r.time.startsWith(today));
+  let bc=0, fc=0, pc=0, bt=0, ft=0, dc=0;
+  todayRecords.forEach(r => {
+    if (r.type === 'feed') {
+      if (r.milkType==='breast') { bc++; bt+=Number(r.amount)||0; }
+      else { fc++; ft+=Number(r.amount)||0; }
+    } else { dc++; if (r.hasPoop) pc++; }
+  });
+  document.getElementById('breastCount').textContent = bc;
+  document.getElementById('formulaCount').textContent = fc;
+  document.getElementById('poopCount').textContent = pc;
+  document.getElementById('breastTotal').textContent = bt;
+  document.getElementById('formulaTotal').textContent = ft;
+  document.getElementById('diaperCount').textContent = dc;
+
+  const list = document.getElementById('todayList');
+  list.innerHTML = todayRecords.length === 0
+    ? '<div class="empty"><div class="icon">📝</div>今天还没有记录<br>点击下方按钮开始记录吧</div>'
+    : todayRecords.map(renderRecordItem).join('');
+  renderHistory(records);
+}
+
+function renderRecordItem(r) {
+  let tag = '';
+  if (r.type === 'feed') tag = `<span class="tag ${r.milkType}">${r.milkType==='breast'?'母乳':'奶粉'}</span>`;
+  else if (r.hasPoop) tag = `<span class="tag poop">有粑粑</span>`;
+  return `<div class="record-item">
+    <div class="record-icon ${getRecordIconClass(r)}">${getRecordIcon(r)}</div>
+    <div class="record-info">
+      <div class="record-type">${getRecordTypeName(r)}${tag}</div>
+      <div class="record-time">${r.time}${r.note?' · '+r.note:''}</div>
+    </div>
+    ${r.photo?`<img class="record-photo" src="${r.photo}" onclick="viewPhoto('${r.id}')">`:''}
+    ${r.type==='feed'?`<div class="record-amount">${r.amount}ml</div>`:''}
+    <button class="record-del" onclick="delRecord('${r.id}')">删除</button>
+  </div>`;
+}
+function viewPhoto(id) {
+  const r = loadLocal().find(x => x.id === id);
+  if (r && r.photo) {
+    const w = window.open('');
+    w.document.write('<img src="' + r.photo + '" style="max-width:100%;display:block;margin:auto;">');
+  }
+}
+
+function renderHistory(records) {
+  // 按天汇总
+  const groups = {};
+  records.forEach(r => {
+    const d = (r.time || '').split('T')[0].split(' ')[0];
+    if (!d) return;
+    if (!groups[d]) groups[d] = {bc:0,fc:0,pc:0,bt:0,ft:0,dc:0,items:[]};
+    if (r.type==='feed') {
+      if (r.milkType==='breast'){groups[d].bc++;groups[d].bt+=Number(r.amount)||0;}
+      else{groups[d].fc++;groups[d].ft+=Number(r.amount)||0;}
+    } else { groups[d].dc++; if(r.hasPoop) groups[d].pc++; }
+    groups[d].items.push(r);
+  });
+  const dates = Object.keys(groups).sort();
+  
+  // 用Canvas绘制折线图
+  const canvas = document.getElementById('trendChart');
+  if (canvas && dates.length > 0) {
+    const ctx = canvas.getContext('2d');
+    const w = canvas.offsetWidth || 300;
+    const h = 200;
+    canvas.width = w * 2;
+    canvas.height = h * 2;
+    ctx.scale(2, 2);
+    const padL = 40, padR = 40, padT = 20, padB = 40;
+    const chartW = w - padL - padR;
+    const chartH = h - padT - padB;
+    
+    // 计算最大值
+    let maxVal = 10;
+    dates.forEach(d => {
+      maxVal = Math.max(maxVal, groups[d].bt, groups[d].ft, groups[d].pc * 30);
+    });
+    maxVal = Math.ceil(maxVal / 10) * 10;
+    
+    // 清空
+    ctx.clearRect(0, 0, w, h);
+    
+    // 画网格线
+    ctx.strokeStyle = '#eee';
+    ctx.lineWidth = 1;
+    ctx.font = '10px sans-serif';
+    ctx.fillStyle = '#999';
+    for (let i = 0; i <= 5; i++) {
+      const y = padT + chartH * i / 5;
+      ctx.beginPath();
+      ctx.moveTo(padL, y);
+      ctx.lineTo(w - padR, y);
+      ctx.stroke();
+      const val = Math.round(maxVal * (5 - i) / 5);
+      ctx.fillText(val, 5, y + 3);
+    }
+    
+    // 画X轴标签
+    ctx.fillStyle = '#666';
+    ctx.textAlign = 'center';
+    dates.forEach((d, i) => {
+      const x = padL + chartW * i / Math.max(dates.length - 1, 1);
+      ctx.fillText(d.slice(5), x, h - padB + 15);
+    });
+    
+    // 画线函数
+    function drawLine(values, color) {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      values.forEach((v, i) => {
+        const x = padL + chartW * i / Math.max(dates.length - 1, 1);
+        const y = padT + chartH * (1 - v / maxVal);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+      // 画点
+      ctx.fillStyle = color;
+      values.forEach((v, i) => {
+        const x = padL + chartW * i / Math.max(dates.length - 1, 1);
+        const y = padT + chartH * (1 - v / maxVal);
+        ctx.beginPath();
+        ctx.arc(x, y, 3, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }
+    
+    drawLine(dates.map(d => groups[d].bt), '#FF6B8A');
+    drawLine(dates.map(d => groups[d].ft), '#FFA94D');
+    drawLine(dates.map(d => groups[d].pc * 30), '#8B5A2B');
+    
+    // 画图例
+    ctx.textAlign = 'left';
+    ctx.font = '11px sans-serif';
+    const legends = [
+      {color: '#FF6B8A', label: '母乳量(ml)'},
+      {color: '#FFA94D', label: '奶粉量(ml)'},
+      {color: '#8B5A2B', label: '粑粑次数×30'}
+    ];
+    legends.forEach((lg, i) => {
+      const x = padL + i * 90;
+      const y = h - 10;
+      ctx.fillStyle = lg.color;
+      ctx.fillRect(x, y - 8, 12, 3);
+      ctx.fillStyle = '#666';
+      ctx.fillText(lg.label, x + 16, y - 4);
+    });
+  }
+  
+  // 渲染历史明细
+  const revDates = [...dates].reverse();
+  document.getElementById('historyList').innerHTML = revDates.length === 0
+    ? '<div class="empty"><div class="icon">📊</div>暂无历史记录</div>'
+    : revDates.map(d => {
+        const g = groups[d];
+        return `<div class="day-group">
+          <div class="day-header"><span>${d}</span>
+            <span class="day-summary">母乳${g.bt}ml/${g.bc}次 · 奶粉${g.ft}ml/${g.fc}次<br>粑粑${g.pc}次 · 换片${g.dc}次</span>
+          </div>
+          <div class="record-list">${g.items.map(renderRecordItem).join('')}</div>
+        </div>`;
+      }).join('');
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab===tab));
+  document.getElementById('todayPanel').style.display = tab==='today' ? 'block' : 'none';
+  document.getElementById('historyPanel').style.display = tab==='history' ? 'block' : 'none';
+  if (tab==='history') renderHistory(loadLocal());
+}
+
+/* ========== 记录弹窗 ========== */
+function openModal(type) {
+  currentType = type; currentMilkType = 'breast'; currentHasPoop = false; currentPhoto = null;
+  document.getElementById('modalTitle').textContent = type==='feed' ? '记录喂奶 🍼' : '换尿布 👶';
+  document.getElementById('milkTypeGroup').style.display = type==='feed' ? 'block' : 'none';
+  document.getElementById('amountGroup').style.display = type==='feed' ? 'block' : 'none';
+  document.getElementById('poopGroup').style.display = type==='diaper' ? 'block' : 'none';
+  document.getElementById('amountInput').value = '';
+  document.getElementById('noteInput').value = '';
+  document.getElementById('timeInput').value = nowLocalInput();
+  document.querySelectorAll('.quick-tag').forEach(t => t.classList.remove('active'));
+  document.getElementById('optBreast').classList.add('active');
+  document.getElementById('optFormula').classList.remove('active');
+  document.getElementById('optPoopNo').classList.add('active');
+  document.getElementById('optPoopYes').classList.remove('active');
+  document.getElementById('photoPreview').style.display = 'none';
+  document.getElementById('photoPreview').src = '';
+  document.getElementById('photoPlaceholder').style.display = 'inline';
+  document.getElementById('clearPhotoBtn').style.display = 'none';
+  document.getElementById('photoInput').value = '';
+  document.getElementById('modalMask').classList.add('show');
+}
+function handlePhoto(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const img = new Image();
+    img.onload = function() {
+      const canvas = document.createElement('canvas');
+      let w = img.width, h = img.height;
+      const maxW = 800;
+      if (w > maxW) { h = h * maxW / w; w = maxW; }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      currentPhoto = canvas.toDataURL('image/jpeg', 0.7);
+      document.getElementById('photoPreview').src = currentPhoto;
+      document.getElementById('photoPreview').style.display = 'block';
+      document.getElementById('photoPlaceholder').style.display = 'none';
+      document.getElementById('clearPhotoBtn').style.display = 'inline-block';
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+function clearPhoto() {
+  currentPhoto = null;
+  document.getElementById('photoPreview').style.display = 'none';
+  document.getElementById('photoPreview').src = '';
+  document.getElementById('photoPlaceholder').style.display = 'inline';
+  document.getElementById('clearPhotoBtn').style.display = 'none';
+  document.getElementById('photoInput').value = '';
+}
+function closeModal() { document.getElementById('modalMask').classList.remove('show'); }
+function closeModalMask(e) { if (e.target === document.getElementById('modalMask')) closeModal(); }
+function setMilkType(t) {
+  currentMilkType = t;
+  document.getElementById('optBreast').classList.toggle('active', t==='breast');
+  document.getElementById('optFormula').classList.toggle('active', t==='formula');
+}
+function setPoop(h) {
+  currentHasPoop = h;
+  document.getElementById('optPoopNo').classList.toggle('active', !h);
+  document.getElementById('optPoopYes').classList.toggle('active', h);
+}
+function setAmount(v, e) {
+  document.getElementById('amountInput').value = v;
+  document.querySelectorAll('.quick-tag').forEach(t => t.classList.remove('active'));
+  if (e && e.target) e.target.classList.add('active');
+}
+
+async function saveRecord() {
+  const tv = document.getElementById('timeInput').value;
+  if (!tv) { alert('请选择时间'); return; }
+  const time = tv.replace('T', ' ');
+  let amount=null, milkType=null, hasPoop=false;
+  if (currentType==='feed') {
+    milkType = currentMilkType;
+    amount = document.getElementById('amountInput').value;
+    if (!amount || Number(amount)<=0) { alert('请输入喂奶剂量'); return; }
+    amount = Number(amount);
+  } else hasPoop = currentHasPoop;
+  const note = document.getElementById('noteInput').value.trim();
+  const records = loadLocal();
+  records.unshift({
+    id: Date.now().toString(), type: currentType,
+    milkType, amount, hasPoop, time, note,
+    photo: currentPhoto,
+    createdAt: new Date().toISOString()
+  });
+  saveLocal(records);
+  closeModal();
+  render();
+  if (cloudEnabled) pushToCloud(records);
+}
+
+async function delRecord(id) {
+  if (!confirm('确定删除这条记录吗？')) return;
+  const records = loadLocal().filter(r => r.id !== id);
+  saveLocal(records);
+  render();
+  if (cloudEnabled) pushToCloud(records);
+}
+
+/* ========== 初始化 ========== */
+(function init(){
+  document.getElementById('todayDate').textContent = formatDate(new Date());
+  document.getElementById('babyAge').textContent = getBabyAge();
+  render();
+  initCloud();
+  setInterval(() => { if (cloudEnabled) pullFromCloud(true); }, 30000);
+})();
+</script>
+</body>
+</html>
