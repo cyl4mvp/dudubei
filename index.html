@@ -155,7 +155,11 @@
   .type-option.active.formula { border-color: #FF9F43; background: #FFF3E6; color: #FF9F43; font-weight: 600; }
   .type-option.active.poop-yes { border-color: #8B5E3C; background: #F5EDE4; color: #8B5E3C; font-weight: 600; }
   .type-option.active.poop-no { border-color: #5B9BD5; background: #EDF4FC; color: #5B9BD5; font-weight: 600; }
-  .quick-amounts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .timer-area { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.timer-display { font-size: 28px; font-weight: bold; color: #FF6B8A; font-family: monospace; flex: 1; text-align: center; background: #FFF0F3; border-radius: 8px; padding: 8px; }
+.timer-btn { background: #FF6B8A; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; }
+.timer-btn.running { background: #ff6b6b; }
+.quick-amounts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
   .quick-tag {
     padding: 6px 14px; background: #f5f5f5; border-radius: 20px;
     font-size: 13px; color: #666; cursor: pointer; border: none;
@@ -318,7 +322,7 @@
     </div>
     <div class="form-group" id="amountGroup">
       <label>剂量 (ml)</label>
-      <input type="number" id="amountInput" placeholder="请输入奶量" inputmode="numeric">
+      <input type="number" id="amountInput" placeholder="请输入奶量（选填）" inputmode="numeric">
       <div class="quick-amounts">
         <button class="quick-tag" onclick="setAmount(30,event)">30ml</button>
         <button class="quick-tag" onclick="setAmount(60,event)">60ml</button>
@@ -326,6 +330,21 @@
         <button class="quick-tag" onclick="setAmount(120,event)">120ml</button>
         <button class="quick-tag" onclick="setAmount(150,event)">150ml</button>
         <button class="quick-tag" onclick="setAmount(180,event)">180ml</button>
+      </div>
+    </div>
+    <div class="form-group" id="durationGroup" style="display:none;">
+      <label>喂养时长 (分钟)</label>
+      <div class="timer-area">
+        <div class="timer-display" id="timerDisplay">00:00</div>
+        <button class="timer-btn" id="timerBtn" onclick="toggleTimer()">开始计时</button>
+      </div>
+      <input type="number" id="durationInput" placeholder="或手动输入分钟数（选填）" inputmode="numeric">
+      <div class="quick-amounts">
+        <button class="quick-tag" onclick="setDuration(5,event)">5分</button>
+        <button class="quick-tag" onclick="setDuration(10,event)">10分</button>
+        <button class="quick-tag" onclick="setDuration(15,event)">15分</button>
+        <button class="quick-tag" onclick="setDuration(20,event)">20分</button>
+        <button class="quick-tag" onclick="setDuration(30,event)">30分</button>
       </div>
     </div>
     <div class="form-group" id="poopGroup" style="display:none;">
@@ -396,6 +415,10 @@ const SUPABASE_KEY = 'sb_publishable_qKiglG7EjF_v7-MY9nQ4QQ_41ddkmhC';
 let currentType = 'feed', currentMilkType = 'breast', currentHasPoop = false, currentPhoto = null;
 let calYear = 0, calMonth = 0, calSelectedDay = null;
 let editingId = null;
+let currentDuration = null;
+let timerInterval = null;
+let timerSeconds = 0;
+let timerRunning = false;
 let cloudEnabled = false;
 
 /* ========== 本地存储 ========== */
@@ -625,7 +648,7 @@ function renderRecordItem(r) {
   return `<div class="record-item">
     <div class="record-icon ${getRecordIconClass(r)}">${getRecordIcon(r)}</div>
     <div class="record-info">
-      <div class="record-type">${getRecordTypeName(r)}</div>
+      <div class="record-type">${getRecordTypeName(r)}${r.duration?' · '+r.duration+'分钟':''}</div>
       <div class="record-time">${r.time}${r.note?' · '+r.note:''}</div>
     </div>
     ${r.photo?`<img class="record-photo" src="${r.photo}" onclick="viewPhoto('${r.id}')">`:''}
@@ -873,8 +896,10 @@ function editRecord(id) {
   
   if (r.type==='feed') {
     document.getElementById('amountInput').value = r.amount || '';
+    document.getElementById('durationInput').value = r.duration || '';
     document.getElementById('optFormula').classList.toggle('active', r.milkType==='formula');
     document.getElementById('optBreast').classList.toggle('active', r.milkType==='breast');
+    document.getElementById('durationGroup').style.display = r.milkType==='breast' ? 'block' : 'none';
   }
   if (r.type==='diaper') {
     document.getElementById('optPoopNo').classList.toggle('active', !r.hasPoop);
@@ -900,12 +925,15 @@ function editRecord(id) {
   document.getElementById('modalMask').classList.add('show');
 }
 function openModal(type) {
-  currentType = type; currentMilkType = 'formula'; currentHasPoop = false; currentPhoto = null; editingId = null;
+  currentType = type; currentMilkType = 'formula'; currentHasPoop = false; currentPhoto = null; editingId = null; currentDuration = null;
   document.getElementById('modalTitle').textContent = type==='feed' ? '记录喂奶 🍼' : '换尿布 🩲';
   document.getElementById('milkTypeGroup').style.display = type==='feed' ? 'block' : 'none';
   document.getElementById('amountGroup').style.display = type==='feed' ? 'block' : 'none';
   document.getElementById('poopGroup').style.display = type==='diaper' ? 'block' : 'none';
   document.getElementById('amountInput').value = '';
+  document.getElementById('durationInput').value = '';
+  document.getElementById('durationGroup').style.display = 'none';
+  resetTimer();
   document.getElementById('noteInput').value = '';
   document.getElementById('timeInput').value = nowLocalInput();
   document.querySelectorAll('.quick-tag').forEach(t => t.classList.remove('active'));
@@ -951,12 +979,54 @@ function clearPhoto() {
   document.getElementById('clearPhotoBtn').style.display = 'none';
   document.getElementById('photoInput').value = '';
 }
-function closeModal() { document.getElementById('modalMask').classList.remove('show'); }
+function closeModal() { document.getElementById('modalMask').classList.remove('show'); resetTimer(); }
 function closeModalMask(e) { if (e.target === document.getElementById('modalMask')) closeModal(); }
 function setMilkType(t) {
   currentMilkType = t;
   document.getElementById('optBreast').classList.toggle('active', t==='breast');
   document.getElementById('optFormula').classList.toggle('active', t==='formula');
+  document.getElementById('durationGroup').style.display = t==='breast' ? 'block' : 'none';
+}
+function setDuration(v, e) {
+  document.getElementById('durationInput').value = v;
+  document.querySelectorAll('#durationGroup .quick-tag').forEach(t => t.classList.remove('active'));
+  if (e && e.target) e.target.classList.add('active');
+}
+function toggleTimer() {
+  const btn = document.getElementById('timerBtn');
+  const display = document.getElementById('timerDisplay');
+  if (timerRunning) {
+    // 结束计时
+    clearInterval(timerInterval);
+    timerRunning = false;
+    btn.textContent = '开始计时';
+    btn.classList.remove('running');
+    // 自动填入分钟数（四舍五入）
+    const minutes = Math.round(timerSeconds / 60);
+    if (minutes > 0) {
+      document.getElementById('durationInput').value = minutes;
+    }
+  } else {
+    // 开始计时
+    timerSeconds = 0;
+    timerRunning = true;
+    btn.textContent = '结束计时';
+    btn.classList.add('running');
+    timerInterval = setInterval(() => {
+      timerSeconds++;
+      const m = Math.floor(timerSeconds / 60);
+      const s = timerSeconds % 60;
+      display.textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+    }, 1000);
+  }
+}
+function resetTimer() {
+  if (timerInterval) clearInterval(timerInterval);
+  timerRunning = false;
+  timerSeconds = 0;
+  document.getElementById('timerDisplay').textContent = '00:00';
+  document.getElementById('timerBtn').textContent = '开始计时';
+  document.getElementById('timerBtn').classList.remove('running');
 }
 function setPoop(h) {
   currentHasPoop = h;
@@ -977,10 +1047,17 @@ async function saveRecord() {
   if (currentType==='feed') {
     milkType = currentMilkType;
     amount = document.getElementById('amountInput').value;
-    if (!amount || Number(amount)<=0) { alert('请输入喂奶剂量'); return; }
-    amount = Number(amount);
+    amount = amount ? Number(amount) : null;
+    // 母乳时剂量和时长至少填一个
+    if (milkType==='breast') {
+      const dur = document.getElementById('durationInput').value;
+      if ((!amount || amount<=0) && !dur) { alert('请输入奶量或喂养时长'); return; }
+    } else {
+      if (!amount || amount<=0) { alert('请输入喂奶剂量'); return; }
+    }
   } else hasPoop = currentHasPoop;
   const note = document.getElementById('noteInput').value.trim();
+  const duration = currentType==='feed' && currentMilkType==='breast' ? (document.getElementById('durationInput').value || null) : null;
   const records = loadLocal();
   
   if (editingId) {
@@ -990,7 +1067,7 @@ async function saveRecord() {
       records[idx] = {
         ...records[idx],
         type: currentType, milkType, amount, hasPoop, time, note,
-        photo: currentPhoto
+        duration, photo: currentPhoto
       };
     }
   } else {
@@ -998,7 +1075,7 @@ async function saveRecord() {
     records.unshift({
       id: Date.now().toString(), type: currentType,
       milkType, amount, hasPoop, time, note,
-      photo: currentPhoto,
+      duration, photo: currentPhoto,
       createdAt: new Date().toISOString()
     });
   }
