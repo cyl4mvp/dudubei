@@ -99,7 +99,8 @@
   .tag.poop { background: #EFE3D6; color: #8B5E3C; }
   .record-time { font-size: 12px; color: #999; margin-top: 2px; }
   .record-amount { font-size: 15px; font-weight: 700; color: #FF6B8A; margin-right: 8px; white-space: nowrap; }
-  .record-del {
+  .record-edit { background: #4ECDC4; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; margin-right: 6px; }
+.record-del {
     font-size: 12px; color: #ccc; padding: 6px 8px;
     border: none; background: none; cursor: pointer; flex-shrink: 0;
   }
@@ -121,7 +122,10 @@
   .btn-feed { background: linear-gradient(135deg, #FF8FA3, #FF6B8A); color: #fff; }
   .btn-diaper { background: linear-gradient(135deg, #7CB9E8, #5B9BD5); color: #fff; }
   .btn:active { opacity: 0.85; }
-  .modal-mask {
+  .photo-viewer { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); z-index: 9999; justify-content: center; align-items: center; }
+.photo-viewer.show { display: flex; }
+.photo-viewer img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.modal-mask {
     display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4);
     z-index: 100; align-items: flex-end; justify-content: center;
   }
@@ -308,8 +312,8 @@
     <div class="form-group" id="milkTypeGroup">
       <label>奶型</label>
       <div class="type-selector">
-        <div class="type-option breast active" id="optBreast" onclick="setMilkType('breast')">🤱 母乳</div>
-        <div class="type-option formula" id="optFormula" onclick="setMilkType('formula')">🍼 奶粉</div>
+        <div class="type-option formula active" id="optFormula" onclick="setMilkType('formula')">🍼 奶粉</div>
+        <div class="type-option breast" id="optBreast" onclick="setMilkType('breast')">🤱 母乳</div>
       </div>
     </div>
     <div class="form-group" id="amountGroup">
@@ -355,6 +359,11 @@
   </div>
 </div>
 
+<!-- 图片预览弹窗 -->
+<div class="photo-viewer" id="photoViewer" onclick="closePhotoViewer()">
+  <img id="photoViewerImg" src="">
+</div>
+
 <!-- 设置弹窗 -->
 <div class="modal-mask" id="settingsMask" onclick="closeSettingsMask(event)">
   <div class="modal">
@@ -386,6 +395,7 @@ const SUPABASE_URL = 'https://vaovpnqfslxytuszgtdb.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_qKiglG7EjF_v7-MY9nQ4QQ_41ddkmhC';
 let currentType = 'feed', currentMilkType = 'breast', currentHasPoop = false, currentPhoto = null;
 let calYear = 0, calMonth = 0, calSelectedDay = null;
+let editingId = null;
 let cloudEnabled = false;
 
 /* ========== 本地存储 ========== */
@@ -447,10 +457,14 @@ async function pushToCloud(records) {
       'Prefer': 'return=minimal'
     };
     // 先查询是否已有记录
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
     const queryRes = await fetch(SUPABASE_URL + '/rest/v1/baby_data?type=eq.shared&select=id', {
       method: 'GET',
-      headers: headers
+      headers: headers,
+      signal: controller.signal
     });
+    clearTimeout(timeoutId);
     const existing = await queryRes.json();
     if (existing && existing.length > 0) {
       await fetch(SUPABASE_URL + '/rest/v1/baby_data?id=eq.' + existing[0].id, {
@@ -483,10 +497,14 @@ async function pullFromCloud(silent) {
       'apikey': SUPABASE_KEY,
       'Authorization': 'Bearer ' + SUPABASE_KEY
     };
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
     const res = await fetch(SUPABASE_URL + '/rest/v1/baby_data?type=eq.shared', {
       method: 'GET',
-      headers: headers
+      headers: headers,
+      signal: controller.signal
     });
+    clearTimeout(timeoutId);
     const data = await res.json();
     if (data && data.length > 0 && data[0].records) {
       saveLocal(data[0].records);
@@ -497,7 +515,7 @@ async function pullFromCloud(silent) {
   } catch(e) {
     console.error('拉取失败', e);
     setSyncing(false);
-    if (!silent) alert('同步失败，请检查网络');
+    if (!silent) alert('同步失败，使用本地数据');
   }
 }
 
@@ -615,15 +633,19 @@ function renderRecordItem(r) {
     </div>
     ${r.photo?`<img class="record-photo" src="${r.photo}" onclick="viewPhoto('${r.id}')">`:''}
     ${r.type==='feed'?`<div class="record-amount">${r.amount}ml</div>`:''}
+    <button class="record-edit" onclick="editRecord('${r.id}')">编辑</button>
     <button class="record-del" onclick="delRecord('${r.id}')">删除</button>
   </div>`;
 }
 function viewPhoto(id) {
   const r = loadLocal().find(x => x.id === id);
   if (r && r.photo) {
-    const w = window.open('');
-    w.document.write('<img src="' + r.photo + '" style="max-width:100%;display:block;margin:auto;">');
+    document.getElementById('photoViewerImg').src = r.photo;
+    document.getElementById('photoViewer').classList.add('show');
   }
+}
+function closePhotoViewer() {
+  document.getElementById('photoViewer').classList.remove('show');
 }
 
 function renderHistory(records) {
@@ -838,8 +860,50 @@ function selectDay(dateStr) {
 }
 
 /* ========== 记录弹窗 ========== */
+function editRecord(id) {
+  const r = loadLocal().find(x => x.id === id);
+  if (!r) return;
+  editingId = id;
+  currentType = r.type;
+  currentMilkType = r.milkType || 'formula';
+  currentHasPoop = r.hasPoop || false;
+  currentPhoto = r.photo || null;
+  
+  document.getElementById('modalTitle').textContent = r.type==='feed' ? '编辑喂奶 🍼' : '编辑换尿布 🩲';
+  document.getElementById('milkTypeGroup').style.display = r.type==='feed' ? 'block' : 'none';
+  document.getElementById('amountGroup').style.display = r.type==='feed' ? 'block' : 'none';
+  document.getElementById('poopGroup').style.display = r.type==='diaper' ? 'block' : 'none';
+  
+  if (r.type==='feed') {
+    document.getElementById('amountInput').value = r.amount || '';
+    document.getElementById('optFormula').classList.toggle('active', r.milkType==='formula');
+    document.getElementById('optBreast').classList.toggle('active', r.milkType==='breast');
+  }
+  if (r.type==='diaper') {
+    document.getElementById('optPoopNo').classList.toggle('active', !r.hasPoop);
+    document.getElementById('optPoopYes').classList.toggle('active', r.hasPoop);
+  }
+  
+  // 时间格式转换
+  let timeVal = r.time || '';
+  if (timeVal.includes(' ')) timeVal = timeVal.replace(' ', 'T');
+  document.getElementById('timeInput').value = timeVal;
+  document.getElementById('noteInput').value = r.note || '';
+  
+  // 图片
+  if (r.photo) {
+    document.getElementById('photoPreview').src = r.photo;
+    document.getElementById('photoPreview').style.display = 'block';
+    document.getElementById('photoPlaceholder').style.display = 'none';
+    document.getElementById('clearPhotoBtn').style.display = 'inline-block';
+  } else {
+    clearPhoto();
+  }
+  
+  document.getElementById('modalMask').classList.add('show');
+}
 function openModal(type) {
-  currentType = type; currentMilkType = 'breast'; currentHasPoop = false; currentPhoto = null;
+  currentType = type; currentMilkType = 'formula'; currentHasPoop = false; currentPhoto = null; editingId = null;
   document.getElementById('modalTitle').textContent = type==='feed' ? '记录喂奶 🍼' : '换尿布 🩲';
   document.getElementById('milkTypeGroup').style.display = type==='feed' ? 'block' : 'none';
   document.getElementById('amountGroup').style.display = type==='feed' ? 'block' : 'none';
@@ -848,8 +912,8 @@ function openModal(type) {
   document.getElementById('noteInput').value = '';
   document.getElementById('timeInput').value = nowLocalInput();
   document.querySelectorAll('.quick-tag').forEach(t => t.classList.remove('active'));
-  document.getElementById('optBreast').classList.add('active');
-  document.getElementById('optFormula').classList.remove('active');
+  document.getElementById('optFormula').classList.add('active');
+  document.getElementById('optBreast').classList.remove('active');
   document.getElementById('optPoopNo').classList.add('active');
   document.getElementById('optPoopYes').classList.remove('active');
   document.getElementById('photoPreview').style.display = 'none';
@@ -921,12 +985,27 @@ async function saveRecord() {
   } else hasPoop = currentHasPoop;
   const note = document.getElementById('noteInput').value.trim();
   const records = loadLocal();
-  records.unshift({
-    id: Date.now().toString(), type: currentType,
-    milkType, amount, hasPoop, time, note,
-    photo: currentPhoto,
-    createdAt: new Date().toISOString()
-  });
+  
+  if (editingId) {
+    // 编辑模式：更新已有记录
+    const idx = records.findIndex(r => r.id === editingId);
+    if (idx >= 0) {
+      records[idx] = {
+        ...records[idx],
+        type: currentType, milkType, amount, hasPoop, time, note,
+        photo: currentPhoto
+      };
+    }
+  } else {
+    // 新增模式
+    records.unshift({
+      id: Date.now().toString(), type: currentType,
+      milkType, amount, hasPoop, time, note,
+      photo: currentPhoto,
+      createdAt: new Date().toISOString()
+    });
+  }
+  
   saveLocal(records);
   closeModal();
   render();
