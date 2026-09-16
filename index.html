@@ -622,13 +622,10 @@ function render() {
 }
 
 function renderRecordItem(r) {
-  let tag = '';
-  if (r.type === 'feed') tag = `<span class="tag ${r.milkType}">${r.milkType==='breast'?'母乳':'奶粉'}</span>`;
-  else if (r.hasPoop) tag = `<span class="tag poop">有粑粑</span>`;
   return `<div class="record-item">
     <div class="record-icon ${getRecordIconClass(r)}">${getRecordIcon(r)}</div>
     <div class="record-info">
-      <div class="record-type">${getRecordTypeName(r)}${tag}</div>
+      <div class="record-type">${getRecordTypeName(r)}</div>
       <div class="record-time">${r.time}${r.note?' · '+r.note:''}</div>
     </div>
     ${r.photo?`<img class="record-photo" src="${r.photo}" onclick="viewPhoto('${r.id}')">`:''}
