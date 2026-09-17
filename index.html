@@ -320,6 +320,14 @@
         <div class="type-option breast" id="optBreast" onclick="setMilkType('breast')">🤱 母乳</div>
       </div>
     </div>
+    <div class="form-group" id="sideGroup" style="display:none;">
+      <label>左右乳</label>
+      <div class="type-selector">
+        <div class="type-option side-left" id="optLeft" onclick="setSide('left')">⬅️ 左乳</div>
+        <div class="type-option side-right" id="optRight" onclick="setSide('right')">右乳 ➡️</div>
+        <div class="type-option side-both" id="optBoth" onclick="setSide('both')">↔️ 双边</div>
+      </div>
+    </div>
     <div class="form-group" id="amountGroup">
       <label>剂量 (ml)</label>
       <input type="number" id="amountInput" placeholder="请输入奶量（选填）" inputmode="numeric">
@@ -419,6 +427,9 @@ let currentDuration = null;
 let timerInterval = null;
 let timerSeconds = 0;
 let timerRunning = false;
+let currentSide = 'left';
+let wakeLock = null;
+let timerStartTimestamp = 0;
 let cloudEnabled = false;
 
 /* ========== 本地存储 ========== */
@@ -604,7 +615,7 @@ function updateLastTime(records) {
   if (feeds.length > 0) {
     const f = feeds[0];
     const type = f.milkType==='breast'?'母乳':'奶粉';
-    document.getElementById('lastFeed').innerHTML = `<span class="time-ago">${timeAgo(f.time)}</span><br>${type} ${f.amount}ml`;
+    document.getElementById('lastFeed').innerHTML = `<span class="time-ago">${timeAgo(f.time)}</span><br>${type}${f.amount? ' '+f.amount+'ml':''}${f.duration? ' '+f.duration+'分钟':''}`;
   } else {
     document.getElementById('lastFeed').textContent = '暂无记录';
   }
@@ -648,11 +659,11 @@ function renderRecordItem(r) {
   return `<div class="record-item">
     <div class="record-icon ${getRecordIconClass(r)}">${getRecordIcon(r)}</div>
     <div class="record-info">
-      <div class="record-type">${getRecordTypeName(r)}${r.duration?' · '+r.duration+'分钟':''}</div>
+      <div class="record-type">${getRecordTypeName(r)}${r.side&&r.side!=='both'?('·'+(r.side==='left'?'左':'右')):''}${r.duration?' · '+r.duration+'分钟':''}</div>
       <div class="record-time">${r.time}${r.note?' · '+r.note:''}</div>
     </div>
     ${r.photo?`<img class="record-photo" src="${r.photo}" onclick="viewPhoto('${r.id}')">`:''}
-    ${r.type==='feed'?`<div class="record-amount">${r.amount}ml</div>`:''}
+    ${r.type==='feed' && r.amount?`<div class="record-amount">${r.amount}ml</div>`:''}
     <button class="record-edit" onclick="editRecord('${r.id}')">编辑</button>
     <button class="record-del" onclick="delRecord('${r.id}')">删除</button>
   </div>`;
@@ -900,6 +911,8 @@ function editRecord(id) {
     document.getElementById('optFormula').classList.toggle('active', r.milkType==='formula');
     document.getElementById('optBreast').classList.toggle('active', r.milkType==='breast');
     document.getElementById('durationGroup').style.display = r.milkType==='breast' ? 'block' : 'none';
+    document.getElementById('sideGroup').style.display = r.milkType==='breast' ? 'block' : 'none';
+    setSide(r.side || 'left');
   }
   if (r.type==='diaper') {
     document.getElementById('optPoopNo').classList.toggle('active', !r.hasPoop);
@@ -933,6 +946,7 @@ function openModal(type) {
   document.getElementById('amountInput').value = '';
   document.getElementById('durationInput').value = '';
   document.getElementById('durationGroup').style.display = 'none';
+  document.getElementById('sideGroup').style.display = 'none';
   resetTimer();
   document.getElementById('noteInput').value = '';
   document.getElementById('timeInput').value = nowLocalInput();
@@ -986,6 +1000,13 @@ function setMilkType(t) {
   document.getElementById('optBreast').classList.toggle('active', t==='breast');
   document.getElementById('optFormula').classList.toggle('active', t==='formula');
   document.getElementById('durationGroup').style.display = t==='breast' ? 'block' : 'none';
+  document.getElementById('sideGroup').style.display = t==='breast' ? 'block' : 'none';
+}
+function setSide(s) {
+  currentSide = s;
+  document.getElementById('optLeft').classList.toggle('active', s==='left');
+  document.getElementById('optRight').classList.toggle('active', s==='right');
+  document.getElementById('optBoth').classList.toggle('active', s==='both');
 }
 function setDuration(v, e) {
   document.getElementById('durationInput').value = v;
@@ -996,34 +1017,45 @@ function toggleTimer() {
   const btn = document.getElementById('timerBtn');
   const display = document.getElementById('timerDisplay');
   if (timerRunning) {
-    // 结束计时
+    // 结束计时 - 用时间戳计算
     clearInterval(timerInterval);
+    if (wakeLock) { wakeLock.release(); wakeLock = null; }
     timerRunning = false;
     btn.textContent = '开始计时';
     btn.classList.remove('running');
-    // 自动填入分钟数（四舍五入）
-    const minutes = Math.round(timerSeconds / 60);
+    const elapsed = Math.floor((Date.now() - timerStartTimestamp) / 1000);
+    const minutes = Math.round(elapsed / 60);
     if (minutes > 0) {
       document.getElementById('durationInput').value = minutes;
     }
   } else {
     // 开始计时
-    timerSeconds = 0;
+    timerStartTimestamp = Date.now();
     timerRunning = true;
     btn.textContent = '结束计时';
     btn.classList.add('running');
-    timerInterval = setInterval(() => {
-      timerSeconds++;
-      const m = Math.floor(timerSeconds / 60);
-      const s = timerSeconds % 60;
+    // 保持屏幕常亮
+    if (navigator.wakeLock) {
+      navigator.wakeLock.request('screen').then(wl => { wakeLock = wl; }).catch(()=>{});
+    }
+    // 立即更新一次显示
+    const updateDisplay = () => {
+      if (!timerRunning) return;
+      const elapsed = Math.floor((Date.now() - timerStartTimestamp) / 1000);
+      const m = Math.floor(elapsed / 60);
+      const s = elapsed % 60;
       display.textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
-    }, 1000);
+    };
+    updateDisplay();
+    timerInterval = setInterval(updateDisplay, 1000);
   }
 }
 function resetTimer() {
   if (timerInterval) clearInterval(timerInterval);
+  if (wakeLock) { wakeLock.release(); wakeLock = null; }
   timerRunning = false;
   timerSeconds = 0;
+  timerStartTimestamp = 0;
   document.getElementById('timerDisplay').textContent = '00:00';
   document.getElementById('timerBtn').textContent = '开始计时';
   document.getElementById('timerBtn').classList.remove('running');
@@ -1067,7 +1099,7 @@ async function saveRecord() {
       records[idx] = {
         ...records[idx],
         type: currentType, milkType, amount, hasPoop, time, note,
-        duration, photo: currentPhoto
+        duration, side: currentMilkType==='breast' ? currentSide : null, photo: currentPhoto
       };
     }
   } else {
@@ -1075,7 +1107,7 @@ async function saveRecord() {
     records.unshift({
       id: Date.now().toString(), type: currentType,
       milkType, amount, hasPoop, time, note,
-      duration, photo: currentPhoto,
+      duration, side: currentMilkType==='breast' ? currentSide : null, photo: currentPhoto,
       createdAt: new Date().toISOString()
     });
   }
