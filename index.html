@@ -445,7 +445,7 @@ let cloudEnabled = false;
 
 /* ========== 本地存储 ========== */
 function loadLocal() { return JSON.parse(localStorage.getItem(LOCAL_KEY) || '[]'); }
-function saveLocal(records) { localStorage.setItem(LOCAL_KEY, JSON.stringify(records)); }
+function saveLocal(records) { localStorage.setItem(LOCAL_KEY, JSON.stringify(records)); if (typeof lastLocalEdit !== 'undefined') lastLocalEdit = Date.now(); }
 function loadConfig() {
   try { return JSON.parse(localStorage.getItem(CONFIG_KEY) || 'null'); }
   catch(e) { return null; }
@@ -665,6 +665,7 @@ function render() {
     ? '<div class="empty"><div class="icon">📝</div>今天还没有记录<br>点击下方按钮开始记录吧</div>'
     : todayRecords.map(renderRecordItem).join('');
   renderHistory(records);
+  renderCalendar();
 }
 
 function renderRecordItem(r) {
