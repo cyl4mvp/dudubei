@@ -753,7 +753,7 @@ function renderHistory(records) {
     });
     
     // 画线函数
-    function drawLine(values, color, showText=false) {
+    function drawLine(values, color, showText=false, textOffset=-8, displayValues=null) {
       ctx.strokeStyle = color;
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -772,18 +772,19 @@ function renderHistory(records) {
         ctx.beginPath();
         ctx.arc(x, y, 3, 0, Math.PI * 2);
         ctx.fill();
-        if (showText && v > 0) {
+        const displayVal = displayValues ? displayValues[i] : v;
+        if (showText && displayVal > 0) {
           ctx.font = '9px sans-serif';
           ctx.textAlign = 'center';
-          ctx.fillText(v, x, y - 8);
+          ctx.fillText(displayVal, x, y + textOffset);
         }
       });
     }
     
-    drawLine(dates.map(d => groups[d].bt), '#FF6B8A', true);
-    drawLine(dates.map(d => groups[d].ft), '#FFA94D', true);
-    drawLine(dates.map(d => groups[d].bt + groups[d].ft), '#2ECC71', true);
-    drawLine(dates.map(d => groups[d].pc * 30), '#8B5A2B', true);
+    drawLine(dates.map(d => groups[d].bt), '#FF6B8A');
+    drawLine(dates.map(d => groups[d].ft), '#FFA94D');
+    drawLine(dates.map(d => groups[d].bt + groups[d].ft), '#2ECC71', true, -10);
+    drawLine(dates.map(d => groups[d].pc * 30), '#8B5A2B', true, 12, dates.map(d => groups[d].pc));
     
     // 画图例
     ctx.textAlign = 'left';
@@ -1152,7 +1153,8 @@ async function delRecord(id) {
   document.getElementById('babyAge').textContent = getBabyAge();
   render();
   initCloud();
-  setInterval(() => { if (cloudEnabled) pullFromCloud(true); }, 30000);
+  let lastLocalEdit = 0;
+setInterval(() => { if (cloudEnabled && Date.now() - lastLocalEdit > 60000) pullFromCloud(true); }, 30000);
   setInterval(() => { updateLastTime(loadLocal()); }, 60000);
 })();
 </script>
