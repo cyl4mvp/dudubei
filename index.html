@@ -722,7 +722,7 @@ function renderHistory(records) {
     // 计算最大值
     let maxVal = 10;
     dates.forEach(d => {
-      maxVal = Math.max(maxVal, groups[d].bt, groups[d].ft, groups[d].pc * 30);
+      maxVal = Math.max(maxVal, groups[d].bt, groups[d].ft, groups[d].bt + groups[d].ft, groups[d].pc * 30);
     });
     maxVal = Math.ceil(maxVal / 10) * 10;
     
@@ -753,7 +753,7 @@ function renderHistory(records) {
     });
     
     // 画线函数
-    function drawLine(values, color) {
+    function drawLine(values, color, showText=false) {
       ctx.strokeStyle = color;
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -764,7 +764,7 @@ function renderHistory(records) {
         else ctx.lineTo(x, y);
       });
       ctx.stroke();
-      // 画点
+      // 画点+数值
       ctx.fillStyle = color;
       values.forEach((v, i) => {
         const x = padL + chartW * i / Math.max(dates.length - 1, 1);
@@ -772,12 +772,18 @@ function renderHistory(records) {
         ctx.beginPath();
         ctx.arc(x, y, 3, 0, Math.PI * 2);
         ctx.fill();
+        if (showText && v > 0) {
+          ctx.font = '9px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(v, x, y - 8);
+        }
       });
     }
     
-    drawLine(dates.map(d => groups[d].bt), '#FF6B8A');
-    drawLine(dates.map(d => groups[d].ft), '#FFA94D');
-    drawLine(dates.map(d => groups[d].pc * 30), '#8B5A2B');
+    drawLine(dates.map(d => groups[d].bt), '#FF6B8A', true);
+    drawLine(dates.map(d => groups[d].ft), '#FFA94D', true);
+    drawLine(dates.map(d => groups[d].bt + groups[d].ft), '#2ECC71', true);
+    drawLine(dates.map(d => groups[d].pc * 30), '#8B5A2B', true);
     
     // 画图例
     ctx.textAlign = 'left';
@@ -785,10 +791,11 @@ function renderHistory(records) {
     const legends = [
       {color: '#FF6B8A', label: '母乳量(ml)'},
       {color: '#FFA94D', label: '奶粉量(ml)'},
+      {color: '#2ECC71', label: '总奶量(ml)'},
       {color: '#8B5A2B', label: '粑粑次数×30'}
     ];
     legends.forEach((lg, i) => {
-      const x = padL + i * 90;
+      const x = padL + i * 80;
       const y = h - 10;
       ctx.fillStyle = lg.color;
       ctx.fillRect(x, y - 8, 12, 3);
