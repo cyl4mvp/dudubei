@@ -72,6 +72,8 @@
   .stat .num.poop { color: #8B5E3C; }
   .stat .num.diaper { color: #5B9BD5; }
   .stat .label { font-size: 11px; color: #999; margin-top: 2px; }
+  .dual-nums { display: flex; justify-content: center; gap: 12px; align-items: baseline; }
+  .dual-nums .num { font-size: 28px; }
   .section { padding: 16px 16px 0; }
   .record-list { background: #fff; border-radius: 16px; overflow: hidden; }
   .record-item {
@@ -155,6 +157,9 @@
   .type-option.active.formula { border-color: #FF9F43; background: #FFF3E6; color: #FF9F43; font-weight: 600; }
   .type-option.active.poop-yes { border-color: #8B5E3C; background: #F5EDE4; color: #8B5E3C; font-weight: 600; }
   .type-option.active.poop-no { border-color: #5B9BD5; background: #EDF4FC; color: #5B9BD5; font-weight: 600; }
+  .type-option.active.side-left { border-color: #FF6B8A; background: #FFF0F3; color: #FF6B8A; font-weight: 600; }
+  .type-option.active.side-right { border-color: #FF6B8A; background: #FFF0F3; color: #FF6B8A; font-weight: 600; }
+  .type-option.active.side-both { border-color: #FF6B8A; background: #FFF0F3; color: #FF6B8A; font-weight: 600; }
   .timer-area { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
 .timer-display { font-size: 28px; font-weight: bold; color: #FF6B8A; font-family: monospace; flex: 1; text-align: center; background: #FFF0F3; border-radius: 8px; padding: 8px; }
 .timer-btn { background: #FF6B8A; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold; }
@@ -258,7 +263,13 @@
   <div class="stat"><div class="num breast" id="breastCount">0</div><div class="label">母乳次数</div></div>
   <div class="stat"><div class="num formula" id="formulaCount">0</div><div class="label">奶粉次数</div></div>
   <div class="stat"><div class="num poop" id="poopCount">0</div><div class="label">粑粑次数</div></div>
-  <div class="stat"><div class="num breast" id="breastTotal">0</div><div class="label">母乳总量(ml)</div></div>
+  <div class="stat">
+  <div class="dual-nums">
+    <div class="num breast" id="breastTotal">0</div>
+    <div class="num breast" id="breastDuration">0</div>
+  </div>
+  <div class="label">母乳 (ml / 分)</div>
+</div>
   <div class="stat"><div class="num formula" id="formulaTotal">0</div><div class="label">奶粉总量(ml)</div></div>
   <div class="stat"><div class="num diaper" id="diaperCount">0</div><div class="label">换片次数</div></div>
 </div>
@@ -329,7 +340,7 @@
       </div>
     </div>
     <div class="form-group" id="amountGroup">
-      <label>剂量 (ml)</label>
+      <label>容量 (ml)（选填，泵出的母乳才填）</label>
       <input type="number" id="amountInput" placeholder="请输入奶量（选填）" inputmode="numeric">
       <div class="quick-amounts">
         <button class="quick-tag" onclick="setAmount(30,event)">30ml</button>
@@ -341,7 +352,7 @@
       </div>
     </div>
     <div class="form-group" id="durationGroup" style="display:none;">
-      <label>喂养时长 (分钟)</label>
+      <label>时长 (分钟)</label>
       <div class="timer-area">
         <div class="timer-display" id="timerDisplay">00:00</div>
         <button class="timer-btn" id="timerBtn" onclick="toggleTimer()">开始计时</button>
@@ -615,7 +626,7 @@ function updateLastTime(records) {
   if (feeds.length > 0) {
     const f = feeds[0];
     const type = f.milkType==='breast'?'母乳':'奶粉';
-    document.getElementById('lastFeed').innerHTML = `<span class="time-ago">${timeAgo(f.time)}</span><br>${type}${f.amount? ' '+f.amount+'ml':''}${f.duration? ' '+f.duration+'分钟':''}`;
+    document.getElementById('lastFeed').innerHTML = `<span class="time-ago">${timeAgo(f.time)}</span><br>${type}${f.milkType==='breast' ? (f.duration? ' '+f.duration+'分钟' : (f.amount? ' '+f.amount+'ml':'')) : (f.amount? ' '+f.amount+'ml':'')}`;
   } else {
     document.getElementById('lastFeed').textContent = '暂无记录';
   }
@@ -631,10 +642,10 @@ function render() {
   const records = loadLocal();
   const today = formatDate(new Date());
   const todayRecords = records.filter(r => r.time.startsWith(today));
-  let bc=0, fc=0, pc=0, bt=0, ft=0, dc=0;
+  let bc=0, fc=0, pc=0, bt=0, bd=0, ft=0, dc=0;
   todayRecords.forEach(r => {
     if (r.type === 'feed') {
-      if (r.milkType==='breast') { bc++; bt+=Number(r.amount)||0; }
+      if (r.milkType==='breast') { bc++; bt+=Number(r.amount)||0; bd+=Number(r.duration)||0; }
       else { fc++; ft+=Number(r.amount)||0; }
     } else { dc++; if (r.hasPoop) pc++; }
   });
@@ -642,6 +653,7 @@ function render() {
   document.getElementById('formulaCount').textContent = fc;
   document.getElementById('poopCount').textContent = pc;
   document.getElementById('breastTotal').textContent = bt;
+  document.getElementById('breastDuration').textContent = bd;
   document.getElementById('formulaTotal').textContent = ft;
   document.getElementById('diaperCount').textContent = dc;
 
@@ -659,7 +671,7 @@ function renderRecordItem(r) {
   return `<div class="record-item">
     <div class="record-icon ${getRecordIconClass(r)}">${getRecordIcon(r)}</div>
     <div class="record-info">
-      <div class="record-type">${getRecordTypeName(r)}${r.side&&r.side!=='both'?('·'+(r.side==='left'?'左':'右')):''}${r.duration?' · '+r.duration+'分钟':''}</div>
+      <div class="record-type">${getRecordTypeName(r)}${r.side&&r.side!=='both'?('·'+(r.side==='left'?'左':'右')):''}${r.amount?(' '+r.amount+'ml'):''}${r.duration?(' · '+r.duration+'分钟'):''}</div>
       <div class="record-time">${r.time}${r.note?' · '+r.note:''}</div>
     </div>
     ${r.photo?`<img class="record-photo" src="${r.photo}" onclick="viewPhoto('${r.id}')">`:''}
@@ -1001,6 +1013,7 @@ function setMilkType(t) {
   document.getElementById('optFormula').classList.toggle('active', t==='formula');
   document.getElementById('durationGroup').style.display = t==='breast' ? 'block' : 'none';
   document.getElementById('sideGroup').style.display = t==='breast' ? 'block' : 'none';
+  if (t === 'breast') setSide('left');
 }
 function setSide(s) {
   currentSide = s;
