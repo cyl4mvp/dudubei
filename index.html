@@ -641,7 +641,7 @@ function updateLastTime(records) {
 function render() {
   const records = loadLocal();
   const today = formatDate(new Date());
-  const todayRecords = records.filter(r => r.time.startsWith(today));
+  const todayRecords = records.filter(r => r.time.startsWith(today)).sort((a,b) => b.time.localeCompare(a.time));
   let bc=0, fc=0, pc=0, bt=0, bd=0, ft=0, dc=0;
   todayRecords.forEach(r => {
     if (r.type === 'feed') {
@@ -705,7 +705,7 @@ function renderHistory(records) {
     } else { groups[d].dc++; if(r.hasPoop) groups[d].pc++; }
     groups[d].items.push(r);
   });
-  const dates = Object.keys(groups).sort();
+  const dates = Object.keys(groups).sort().filter(d => d > '2026-09-15');
   
   // 用Canvas绘制折线图
   const canvas = document.getElementById('trendChart');
