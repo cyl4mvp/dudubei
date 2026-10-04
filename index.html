@@ -641,7 +641,12 @@ function updateLastTime(records) {
 function render() {
   const records = loadLocal();
   const today = formatDate(new Date());
-  const todayRecords = records.filter(r => r.time.startsWith(today)).sort((a,b) => b.time.localeCompare(a.time));
+  const todayRecords = records.filter(r => r.time.startsWith(today));
+  todayRecords.sort((a,b) => {
+    const ta = a.time.replace('T',' ');
+    const tb = b.time.replace('T',' ');
+    return tb.localeCompare(ta);
+  });
   let bc=0, fc=0, pc=0, bt=0, bd=0, ft=0, dc=0;
   todayRecords.forEach(r => {
     if (r.type === 'feed') {
