@@ -261,18 +261,10 @@
 </div>
 
 <div class="stats">
-  <div class="stat"><div class="num breast" id="breastCount">0</div><div class="label">母乳次数</div></div>
-  <div class="stat"><div class="num formula" id="formulaCount">0</div><div class="label">奶粉次数</div></div>
   <div class="stat"><div class="num poop" id="poopCount">0</div><div class="label">粑粑次数</div></div>
-  <div class="stat">
-  <div class="dual-nums">
-    <div class="num breast" id="breastTotal">0</div>
-    <div class="num breast" id="breastDuration">0</div>
-  </div>
-  <div class="label">母乳 (ml / 分)</div>
-</div>
-  <div class="stat"><div class="num formula" id="formulaTotal">0</div><div class="label">奶粉总量(ml)</div></div>
-  <div class="stat"><div class="num diaper" id="diaperCount">0</div><div class="label">换片次数</div></div>
+  <div class="stat"><div class="num breast" id="breastTotal">0</div><div class="label">母乳(ml)</div></div>
+  <div class="stat"><div class="num formula" id="formulaTotal">0</div><div class="label">奶粉(ml)</div></div>
+  <div class="stat"><div class="num sleep" id="sleepTotal">0h</div><div class="label">夜晚睡觉</div></div>
 </div>
 
 <div class="last-time">
@@ -287,6 +279,14 @@
 </div>
 
 <div class="pull-refresh" onclick="pullFromCloud()" id="pullRefresh" style="display:none;">↓ 点击从云端同步最新数据</div>
+
+<div id="sleepStatus" style="display:none; margin:12px 20px; background:#EDE7F6; padding:12px 16px; border-radius:12px; align-items:center; gap:12px;">
+  <div style="font-size:28px;">😴</div>
+  <div>
+    <div class="sleep-time" style="font-size:18px; font-weight:700; color:#7B5EA7;">已睡0小时0分钟</div>
+    <div style="font-size:12px; color:#9B7EDB;">点击下方睡觉按钮结束</div>
+  </div>
+</div>
 
 <div class="tab-bar">
   <div class="tab active" data-tab="today" onclick="switchTab('today')">今日记录</div>
