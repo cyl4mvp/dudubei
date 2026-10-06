@@ -123,6 +123,7 @@
   }
   .btn-feed { background: linear-gradient(135deg, #FF8FA3, #FF6B8A); color: #fff; }
   .btn-diaper { background: linear-gradient(135deg, #7CB9E8, #5B9BD5); color: #fff; }
+  .btn-sleep { background: linear-gradient(135deg, #B8A9E8, #9B7EDB); color: #fff; }
   .btn:active { opacity: 0.85; }
   .photo-viewer { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); z-index: 9999; justify-content: center; align-items: center; }
 .photo-viewer.show { display: flex; }
@@ -318,6 +319,7 @@
 <div class="bottom-bar">
   <button class="btn btn-feed" onclick="openModal('feed')">🍼 记录喂奶</button>
   <button class="btn btn-diaper" onclick="openModal('diaper')">🩲 换尿布</button>
+  <button class="btn btn-sleep" onclick="openSleepModal()">😴 睡觉</button>
 </div>
 
 <!-- 记录弹窗 -->
@@ -608,7 +610,9 @@ function getRecordIconClass(r) {
 }
 function getRecordTypeName(r) {
   if (r.type === 'feed') return r.milkType === 'breast' ? '母乳' : '奶粉';
-  return r.hasPoop ? '换尿布(有粑粑)' : '换尿布';
+  if (r.type === 'diaper') return r.hasPoop ? '换尿布(有粑粑)' : '换尿布';
+  if (r.type === 'sleep') return '睡觉';
+  return '记录';
 }
 
 function timeAgo(dateStr) {
@@ -647,20 +651,43 @@ function render() {
     const tb = b.time.replace('T',' ');
     return tb.localeCompare(ta);
   });
-  let bc=0, fc=0, pc=0, bt=0, bd=0, ft=0, dc=0;
+  let pc=0, bt=0, bd=0, ft=0;
   todayRecords.forEach(r => {
     if (r.type === 'feed') {
-      if (r.milkType==='breast') { bc++; bt+=Number(r.amount)||0; bd+=Number(r.duration)||0; }
-      else { fc++; ft+=Number(r.amount)||0; }
-    } else { dc++; if (r.hasPoop) pc++; }
+      if (r.milkType==='breast') { bt+=Number(r.amount)||0; bd+=Number(r.duration)||0; }
+      else { ft+=Number(r.amount)||0; }
+    } else if (r.type === 'diaper') { if (r.hasPoop) pc++; }
   });
-  document.getElementById('breastCount').textContent = bc;
-  document.getElementById('formulaCount').textContent = fc;
+  // 母乳总量 = 实际ml + 分钟×3
+  const breastTotalMl = bt + bd * 3;
   document.getElementById('poopCount').textContent = pc;
-  document.getElementById('breastTotal').textContent = bt;
-  document.getElementById('breastDuration').textContent = bd;
+  document.getElementById('breastTotal').textContent = Math.round(breastTotalMl);
   document.getElementById('formulaTotal').textContent = ft;
-  document.getElementById('diaperCount').textContent = dc;
+  
+  // 夜晚睡觉统计（21:00-次日07:00）
+  let nightSleepMin = 0;
+  todayRecords.forEach(r => {
+    if (r.type === 'sleep' && r.duration) {
+      const hour = parseInt(r.time.split(' ')[1].split(':')[0]);
+      // 晚上9点到早上7点之间开始的睡觉才算夜晚睡觉
+      if (hour >= 21 || hour < 7) {
+        nightSleepMin += Number(r.duration) || 0;
+      }
+    }
+  });
+  document.getElementById('sleepTotal').textContent = Math.floor(nightSleepMin/60) + 'h' + (nightSleepMin%60) + 'm';
+
+  // 正在睡觉提示
+const activeSleep = records.find(r => r.type === 'sleep' && !r.endTime);
+const sleepStatusEl = document.getElementById('sleepStatus');
+if (activeSleep) {
+  const start = new Date(activeSleep.time);
+  const elapsed = Math.round((new Date() - start) / 60000);
+  sleepStatusEl.style.display = 'flex';
+  sleepStatusEl.querySelector('.sleep-time').textContent = '已睡' + Math.floor(elapsed/60) + '小时' + (elapsed%60) + '分钟';
+} else {
+  sleepStatusEl.style.display = 'none';
+}
 
   // 距上次计算
   updateLastTime(records);
@@ -677,7 +704,7 @@ function renderRecordItem(r) {
   return `<div class="record-item">
     <div class="record-icon ${getRecordIconClass(r)}">${getRecordIcon(r)}</div>
     <div class="record-info">
-      <div class="record-type">${getRecordTypeName(r)}${r.side&&r.side!=='both'?('·'+(r.side==='left'?'左':'右')):''}${r.amount?(' '+r.amount+'ml'):''}${r.duration?(' · '+r.duration+'分钟'):''}</div>
+      <div class="record-type">${getRecordTypeName(r)}${r.side&&r.side!=='both'?('·'+(r.side==='left'?'左':'右')):''}${r.amount?(' '+r.amount+'ml'):''}${r.duration?(' · '+r.duration+'分钟'):''}${r.type==='sleep'&&r.duration?(' · '+Math.floor(r.duration/60)+'小时'+(r.duration%60)+'分'):''}</div>
       <div class="record-time">${r.time}${r.note?' · '+r.note:''}</div>
     </div>
     ${r.photo?`<img class="record-photo" src="${r.photo}" onclick="viewPhoto('${r.id}')">`:''}
@@ -963,6 +990,79 @@ function editRecord(id) {
   
   document.getElementById('modalMask').classList.add('show');
 }
+// 睡觉计时
+let sleepStartTime = null;
+let sleepTimerInterval = null;
+
+function openSleepModal() {
+  const records = loadLocal();
+  // 检查是否有正在进行的睡觉记录（没有结束时间的）
+  const activeSleep = records.find(r => r.type === 'sleep' && !r.endTime);
+  if (activeSleep) {
+    // 结束睡觉
+    endSleep(activeSleep);
+  } else {
+    // 开始睡觉
+    startSleep();
+  }
+}
+
+function startSleep() {
+  sleepStartTime = new Date();
+  const nowStr = sleepStartTime.getFullYear() + '-' + 
+    String(sleepStartTime.getMonth()+1).padStart(2,'0') + '-' +
+    String(sleepStartTime.getDate()).padStart(2,'0') + ' ' +
+    String(sleepStartTime.getHours()).padStart(2,'0') + ':' +
+    String(sleepStartTime.getMinutes()).padStart(2,'0');
+  
+  const records = loadLocal();
+  records.unshift({
+    id: Date.now().toString(),
+    type: 'sleep',
+    time: nowStr,
+    startTime: nowStr,
+    endTime: null,
+    duration: null,
+    note: '',
+    createdAt: new Date().toISOString()
+  });
+  saveLocal(records);
+  render();
+  if (cloudEnabled) pushToCloud(records);
+  
+  // 开始计时显示
+  sleepTimerInterval = setInterval(() => {
+    render();
+  }, 60000); // 每分钟刷新
+}
+
+function endSleep(sleepRecord) {
+  const endTime = new Date();
+  const endStr = endTime.getFullYear() + '-' + 
+    String(endTime.getMonth()+1).padStart(2,'0') + '-' +
+    String(endTime.getDate()).padStart(2,'0') + ' ' +
+    String(endTime.getHours()).padStart(2,'0') + ':' +
+    String(endTime.getMinutes()).padStart(2,'0');
+  
+  const start = new Date(sleepRecord.time);
+  const durationMin = Math.round((endTime - start) / 60000);
+  
+  const records = loadLocal();
+  const idx = records.findIndex(r => r.id === sleepRecord.id);
+  if (idx >= 0) {
+    records[idx].endTime = endStr;
+    records[idx].duration = durationMin;
+  }
+  saveLocal(records);
+  render();
+  if (cloudEnabled) pushToCloud(records);
+  
+  clearInterval(sleepTimerInterval);
+  sleepTimerInterval = null;
+  
+  alert('睡了' + Math.floor(durationMin/60) + '小时' + (durationMin%60) + '分钟');
+}
+
 function openModal(type) {
   currentType = type; currentMilkType = 'formula'; currentHasPoop = false; currentPhoto = null; editingId = null; currentDuration = null;
   document.getElementById('modalTitle').textContent = type==='feed' ? '记录喂奶 🍼' : '换尿布 🩲';
