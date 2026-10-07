@@ -374,6 +374,8 @@
     </div>
     <div class="form-group" id="durationGroup" style="display:none;">
       <label>时长 (分钟)</label>
+      <div id="timerDisplay" style="font-size:24px; font-weight:bold; color:#FF6B8A; text-align:center; padding:10px;">00:00</div>
+      <button id="timerBtn" onclick="toggleTimer()" style="width:100%; padding:10px; border:none; border-radius:8px; background:#FF6B8A; color:#fff; font-size:14px; font-weight:bold; margin-bottom:10px;">开始计时</button>
       <input type="number" id="durationInput" placeholder="请输入分钟数" inputmode="numeric">
       <div class="quick-amounts">
         <button class="quick-tag" onclick="setDuration(5,event)">5分</button>
@@ -1210,43 +1212,37 @@ function endSleep(sleepRecord) {
 }
 
 function openModal(type) {
-  // 如果正在母乳计时，点母乳就结束
-  if (type === 'breast' && breastTimerStart) {
-    endBreastTimer();
-    return;
-  }
-  // 瓶喂模式：奶粉或母乳瓶喂
-  currentHasPoop = false; currentPhoto = null; editingId = null; currentDuration = null;
-  if (type === 'formula') { currentType = 'feed'; currentMilkType = 'formula'; }
-  else if (type === 'breast-bottle') { currentType = 'feed'; currentMilkType = 'breast'; }
-  else { currentType = type; currentMilkType = 'formula'; }
-  let title = '记录';
-  if (type==='formula') title = '奶粉 🍼';
-  else if (type==='breast-bottle') title = '母乳瓶喂 🍼';
-  else if (type==='feed') title = '记录喂奶 🍼';
-  else title = '换片 🩲';
-  document.getElementById('modalTitle').textContent = title;
-  const isFeedType = (type==='feed' || type==='formula' || type==='breast-bottle');
-  document.getElementById('milkTypeGroup').style.display = isFeedType ? 'block' : 'none';
-  document.getElementById('amountGroup').style.display = isFeedType ? 'block' : 'none';
-  document.getElementById('poopGroup').style.display = type==='diaper' ? 'block' : 'none';
-  document.getElementById('amountInput').value = '';
-  document.getElementById('durationInput').value = '';
-  document.getElementById('durationGroup').style.display = 'none';
-  document.getElementById('sideGroup').style.display = 'none';
-  resetTimer();
-  // noteInput已删除
-  document.getElementById('timeInput').value = nowLocalInput();
-  document.querySelectorAll('.quick-tag').forEach(t => t.classList.remove('active'));
-  document.getElementById('optFormula').classList.add('active');
-  document.getElementById('optBreast').classList.remove('active');
-  document.getElementById('optPoopNo').classList.add('active');
-  document.getElementById('optPoopYes').classList.remove('active');
-  document.getElementById('photoPreview').style.display = 'none';
-  document.getElementById('photoPreview').src = '';
-  document.getElementById('photoPlaceholder').style.display = 'inline';
-  document.getElementById('clearPhotoBtn').style.display = 'none';
-  document.getElementById('photoInput').value = '';
+  if (type === 'breast' && breastTimerStart) { endBreastTimer(); return; }
+    currentHasPoop = false; currentPhoto = null; editingId = null;
+    if (type === 'formula') { currentType = 'feed'; currentMilkType = 'formula'; }
+    else if (type === 'breast-bottle') { currentType = 'feed'; currentMilkType = 'breast'; }
+    else { currentType = type; currentMilkType = 'formula'; }
+    let title = '记录';
+    if (type==='formula') title = '奶粉 🍼';
+    else if (type==='breast-bottle') title = '母乳瓶喂 🍼';
+    else if (type==='feed') title = '记录喂奶 🍼';
+    else title = '换片 🩲';
+    document.getElementById('modalTitle').textContent = title;
+    const isFeedType = (type==='feed' || type==='formula' || type==='breast-bottle');
+    document.getElementById('milkTypeGroup').style.display = isFeedType ? 'block' : 'none';
+    document.getElementById('amountGroup').style.display = isFeedType ? 'block' : 'none';
+    document.getElementById('poopGroup').style.display = type==='diaper' ? 'block' : 'none';
+    document.getElementById('amountInput').value = '';
+    document.getElementById('durationInput').value = '';
+    document.getElementById('durationGroup').style.display = 'none';
+    document.getElementById('sideGroup').style.display = 'none';
+    resetTimer();
+    document.getElementById('timeInput').value = nowLocalInput();
+    document.querySelectorAll('.quick-tag').forEach(t => t.classList.remove('active'));
+    document.getElementById('optFormula').classList.add('active');
+    document.getElementById('optBreast').classList.remove('active');
+    document.getElementById('optPoopNo').classList.add('active');
+    document.getElementById('optPoopYes').classList.remove('active');
+    document.getElementById('photoPreview').style.display = 'none';
+    document.getElementById('photoPreview').src = '';
+    document.getElementById('photoPlaceholder').style.display = 'inline';
+    document.getElementById('clearPhotoBtn').style.display = 'none';
+    document.getElementById('photoInput').value = '';
   document.getElementById('modalMask').classList.add('show');
 }
 function handlePhoto(e) {
