@@ -265,7 +265,7 @@
 <div class="stats" style="grid-template-columns: repeat(5, 1fr);">
   <div class="stat"><div class="num breast" id="breastTotal">0</div><div class="label">母乳(ml)</div></div>
   <div class="stat"><div class="num formula" id="formulaTotal">0</div><div class="label">奶粉(ml)</div></div>
-  <div class="stat"><div class="num diaper" id="diaperCount">0</div><div class="label">换尿布</div></div>
+  <div class="stat"><div class="num diaper" id="diaperCount">0</div><div class="label">换尿不湿</div></div>
   <div class="stat"><div class="num poop" id="poopCount">0</div><div class="label">粑粑次数</div></div>
   <div class="stat"><div class="num sleep" id="sleepTotal">0h</div><div class="label">夜晚睡觉</div></div>
 </div>
@@ -337,7 +337,7 @@
   <button class="btn btn-feed" onclick="openModal('formula')">🍼 奶粉</button>
   <button class="btn btn-bottle" onclick="openModal('breast-bottle')">🍼 瓶喂</button>
   <button class="btn btn-breast" onclick="toggleBreast()">🤱 母乳</button>
-  <button class="btn btn-diaper" onclick="openModal('diaper')">🩲 尿布</button>
+  <button class="btn btn-diaper" onclick="openModal('diaper')">🩲 尿不湿</button>
   <button class="btn btn-sleep" onclick="openSleepModal()">😴 睡觉</button>
 </div>
 
@@ -625,7 +625,7 @@ function getRecordIconClass(r) {
 }
 function getRecordTypeName(r) {
   if (r.type === 'feed') return r.milkType === 'breast' ? (r.amount ? '母乳瓶喂' : '母乳亲喂') : '奶粉';
-  if (r.type === 'diaper') return r.hasPoop ? '换尿布(有粑粑)' : '换尿布';
+  if (r.type === 'diaper') return r.hasPoop ? '换尿不湿·有粑粑' : '换尿不湿';
   if (r.type === 'sleep') return '睡觉';
   return '记录';
 }
@@ -1000,7 +1000,7 @@ function editRecord(id) {
   currentHasPoop = r.hasPoop || false;
   currentPhoto = r.photo || null;
   
-  let editTitle = r.type==='feed' ? '编辑喂奶 🍼' : '编辑换尿布 🩲';
+  let editTitle = r.type==='feed' ? '编辑喂奶 🍼' : '编辑换尿不湿 🩲';
     if (r.type==='feed') {
       if (r.milkType==='breast' && !r.amount) editTitle = '编辑母乳亲喂 🤱';
       else if (r.milkType==='breast') editTitle = '编辑母乳瓶喂 🍼';
@@ -1222,7 +1222,7 @@ function openModal(type) {
   if (type==='formula') title = '奶粉 🍼';
   else if (type==='breast-bottle') title = '母乳瓶喂 🍼';
   else if (type==='feed') title = '记录喂奶 🍼';
-  else title = '换尿布 🩲';
+  else title = '换尿不湿 🩲';
   document.getElementById('modalTitle').textContent = title;
   const isFeedType = (type==='feed' || type==='formula' || type==='breast-bottle');
   document.getElementById('milkTypeGroup').style.display = isFeedType ? 'block' : 'none';
