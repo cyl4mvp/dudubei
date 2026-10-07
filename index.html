@@ -1235,7 +1235,7 @@ function openModal(type) {
   document.getElementById('durationGroup').style.display = 'none';
   document.getElementById('sideGroup').style.display = 'none';
   resetTimer();
-  document.getElementById('noteInput').value = '';
+  // noteInput已删除
   document.getElementById('timeInput').value = nowLocalInput();
   document.querySelectorAll('.quick-tag').forEach(t => t.classList.remove('active'));
   document.getElementById('optFormula').classList.add('active');
