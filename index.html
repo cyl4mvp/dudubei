@@ -320,6 +320,12 @@
 <div class="section" id="historyPanel" style="display:none;">
   <div style="background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;">
     <h4 style="margin-bottom:12px;color:#333;">📈 每日趋势</h4>
+    <div style="display:flex; gap:6px; margin-bottom:10px; justify-content:center; flex-wrap:wrap;">
+      <button onclick="setTrendRange(7)" id="range7" style="padding:5px 12px; border-radius:14px; border:1px solid #FF6B8A; background:#FF6B8A; color:#fff; font-size:12px; font-weight:bold;">近7天</button>
+      <button onclick="setTrendRange(15)" id="range15" style="padding:5px 12px; border-radius:14px; border:1px solid #ddd; background:#fff; color:#666; font-size:12px;">半个月</button>
+      <button onclick="setTrendRange(30)" id="range30" style="padding:5px 12px; border-radius:14px; border:1px solid #ddd; background:#fff; color:#666; font-size:12px;">一个月</button>
+      <button onclick="setTrendRange(180)" id="range180" style="padding:5px 12px; border-radius:14px; border:1px solid #ddd; background:#fff; color:#666; font-size:12px;">半年</button>
+    </div>
     <canvas id="trendChart" height="220"></canvas>
   </div>
   <div id="historyList"></div>
