@@ -262,10 +262,11 @@
   <button class="sync-btn" onclick="openSettings()" title="设置">⚙️</button>
 </div>
 
-<div class="stats">
-  <div class="stat"><div class="num poop" id="poopCount">0</div><div class="label">粑粑次数</div></div>
+<div class="stats" style="grid-template-columns: repeat(5, 1fr);">
   <div class="stat"><div class="num breast" id="breastTotal">0</div><div class="label">母乳(ml)</div></div>
   <div class="stat"><div class="num formula" id="formulaTotal">0</div><div class="label">奶粉(ml)</div></div>
+  <div class="stat"><div class="num diaper" id="diaperCount">0</div><div class="label">换尿布</div></div>
+  <div class="stat"><div class="num poop" id="poopCount">0</div><div class="label">粑粑次数</div></div>
   <div class="stat"><div class="num sleep" id="sleepTotal">0h</div><div class="label">夜晚睡觉</div></div>
 </div>
 
@@ -659,18 +660,19 @@ function render() {
     const tb = b.time.replace('T',' ');
     return tb.localeCompare(ta);
   });
-  let pc=0, bt=0, bd=0, ft=0;
+  let pc=0, bt=0, bd=0, ft=0, dc=0;
   todayRecords.forEach(r => {
     if (r.type === 'feed') {
       if (r.milkType==='breast') { bt+=Number(r.amount)||0; bd+=Number(r.duration)||0; }
       else { ft+=Number(r.amount)||0; }
-    } else if (r.type === 'diaper') { if (r.hasPoop) pc++; }
+    } else if (r.type === 'diaper') { dc++; if (r.hasPoop) pc++; }
   });
   // 母乳总量 = 实际ml + 分钟×3
   const breastTotalMl = bt + bd * 3;
   document.getElementById('poopCount').textContent = pc;
   document.getElementById('breastTotal').textContent = Math.round(breastTotalMl);
   document.getElementById('formulaTotal').textContent = ft;
+  document.getElementById('diaperCount').textContent = dc;
   
   // 夜晚睡觉统计（21:00-次日07:00）
   let nightSleepMin = 0;
@@ -755,7 +757,10 @@ function renderHistory(records) {
     } else { groups[d].dc++; if(r.hasPoop) groups[d].pc++; }
     groups[d].items.push(r);
   });
-  const dates = Object.keys(groups).sort().filter(d => d > '2026-09-15');
+  let trendRange = window._trendRange || 7;
+  let dates = Object.keys(groups).sort().filter(d => d > '2026-09-15');
+  // 按范围截取
+  if (trendRange > 0) dates = dates.slice(-trendRange);
   
   // 用Canvas绘制折线图
   const canvas = document.getElementById('trendChart');
@@ -766,16 +771,16 @@ function renderHistory(records) {
     canvas.width = w * 2;
     canvas.height = h * 2;
     ctx.scale(2, 2);
-    const padL = 40, padR = 40, padT = 20, padB = 40;
+    const padL = 40, padR = 40, padT = 20, padB = 35;
     const chartW = w - padL - padR;
     const chartH = h - padT - padB;
     
-    // 计算最大值
+    // 计算最大值（总奶量 + 粑粑×30）
     let maxVal = 10;
     dates.forEach(d => {
-      maxVal = Math.max(maxVal, groups[d].bt, groups[d].ft, groups[d].bt + groups[d].ft, groups[d].pc * 30);
+      maxVal = Math.max(maxVal, groups[d].bt, groups[d].bt + groups[d].ft, groups[d].pc * 30);
     });
-    maxVal = Math.ceil(maxVal / 10) * 10;
+    maxVal = Math.ceil(maxVal / 100) * 100;
     
     // 清空
     ctx.clearRect(0, 0, w, h);
@@ -795,12 +800,15 @@ function renderHistory(records) {
       ctx.fillText(val, 5, y + 3);
     }
     
-    // 画X轴标签
+    // 画X轴标签（MM-DD格式，间隔显示避免重叠）
     ctx.fillStyle = '#666';
     ctx.textAlign = 'center';
+    const labelStep = Math.ceil(dates.length / 8);
     dates.forEach((d, i) => {
-      const x = padL + chartW * i / Math.max(dates.length - 1, 1);
-      ctx.fillText(d.slice(5), x, h - padB + 15);
+      if (i % labelStep === 0 || i === dates.length - 1) {
+        const x = padL + chartW * i / Math.max(dates.length - 1, 1);
+        ctx.fillText(d.slice(5).replace('-', '/'), x, h - padB + 15);
+      }
     });
     
     // 画线函数
@@ -824,7 +832,7 @@ function renderHistory(records) {
         ctx.arc(x, y, 3, 0, Math.PI * 2);
         ctx.fill();
         const displayVal = displayValues ? displayValues[i] : v;
-        if (showText && displayVal > 0) {
+        if (showText && displayVal > 0 && dates.length <= 15) {
           ctx.font = '9px sans-serif';
           ctx.textAlign = 'center';
           ctx.fillText(displayVal, x, y + textOffset);
@@ -832,8 +840,8 @@ function renderHistory(records) {
       });
     }
     
+    // 画母乳容量、总奶量、粑粑次数
     drawLine(dates.map(d => groups[d].bt), '#FF6B8A');
-    drawLine(dates.map(d => groups[d].ft), '#FFA94D');
     drawLine(dates.map(d => groups[d].bt + groups[d].ft), '#2ECC71', true, -10);
     drawLine(dates.map(d => groups[d].pc * 30), '#8B5A2B', true, 12, dates.map(d => groups[d].pc));
     
@@ -841,14 +849,13 @@ function renderHistory(records) {
     ctx.textAlign = 'left';
     ctx.font = '11px sans-serif';
     const legends = [
-      {color: '#FF6B8A', label: '母乳量(ml)'},
-      {color: '#FFA94D', label: '奶粉量(ml)'},
+      {color: '#FF6B8A', label: '母乳(ml)'},
       {color: '#2ECC71', label: '总奶量(ml)'},
-      {color: '#8B5A2B', label: '粑粑次数×30'}
+      {color: '#8B5A2B', label: '粑粑×30'}
     ];
     legends.forEach((lg, i) => {
-      const x = padL + i * 80;
-      const y = h - 10;
+      const x = padL + i * 100;
+      const y = h - 5;
       ctx.fillStyle = lg.color;
       ctx.fillRect(x, y - 8, 12, 3);
       ctx.fillStyle = '#666';
@@ -869,6 +876,22 @@ function renderHistory(records) {
           <div class="record-list">${g.items.map(renderRecordItem).join('')}</div>
         </div>`;
       }).join('');
+}
+
+function setTrendRange(days) {
+  window._trendRange = days;
+  // 更新按钮样式
+  const buttons = {7:'range7', 15:'range15', 30:'range30', 180:'range180'};
+  Object.values(buttons).forEach(id => {
+    document.getElementById(id).style.background = '#fff';
+    document.getElementById(id).style.color = '#666';
+  });
+  const btnId = buttons[days];
+  if (btnId) {
+    document.getElementById(btnId).style.background = '#FF6B8A';
+    document.getElementById(btnId).style.color = '#fff';
+  }
+  render();
 }
 
 function switchTab(tab) {
