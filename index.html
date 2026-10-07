@@ -691,7 +691,7 @@ function render() {
       }
     }
   });
-  document.getElementById('sleepTotal').textContent = Math.floor(nightSleepMin/60) + 'h' + (nightSleepMin%60) + 'm';
+  document.getElementById('sleepTotal').textContent = (nightSleepMin/60).toFixed(1) + 'h';
 
   // 正在母乳计时提示
 const breastStatusEl = document.getElementById('breastStatus');
