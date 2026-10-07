@@ -282,11 +282,11 @@
 
 <div class="pull-refresh" onclick="pullFromCloud()" id="pullRefresh" style="display:none;">↓ 点击从云端同步最新数据</div>
 
-<div id="breastStatus" style="display:none; margin:12px 20px; background:#FFE4EC; padding:12px 16px; border-radius:12px; align-items:center; gap:12px;">
+<div id="breastStatus" style="display:none; margin:12px 20px; background:#FFE4EC; padding:12px 16px; border-radius:12px; align-items:center; gap:12px; cursor:pointer;" onclick="editBreastStart()">
   <div style="font-size:28px;">🤱</div>
   <div>
     <div class="breast-time" style="font-size:18px; font-weight:700; color:#FF6B8A;">母乳0小时0分钟</div>
-    <div style="font-size:12px; color:#FF8FA3;">点击下方记录喂奶结束</div>
+    <div style="font-size:12px; color:#FF8FA3;">点击编辑开始时间，点下方母乳结束</div>
   </div>
 </div>
 
@@ -625,7 +625,7 @@ function getRecordIconClass(r) {
   return 'other';
 }
 function getRecordTypeName(r) {
-  if (r.type === 'feed') return r.milkType === 'breast' ? (Number(r.duration) > 0 ? '母乳亲喂' : '母乳瓶喂') : '奶粉';
+  if (r.type === 'feed') return r.milkType === 'breast' ? (r.amount ? '母乳瓶喂' : '母乳亲喂') : '奶粉';
   if (r.type === 'diaper') return r.hasPoop ? '换尿布(有粑粑)' : '换尿布';
   if (r.type === 'sleep') return '睡觉';
   return '记录';
@@ -730,7 +730,7 @@ function renderRecordItem(r) {
   return `<div class="record-item">
     <div class="record-icon ${getRecordIconClass(r)}">${getRecordIcon(r)}</div>
     <div class="record-info">
-      <div class="record-type">${getRecordTypeName(r)}${r.amount?(' '+r.amount+'ml'):''}${Number(r.duration)>0&&r.milkType==='breast'?(' · '+r.duration+'分钟'):''}${r.type==='sleep'&&r.duration?(' · '+Math.floor(r.duration/60)+'小时'+(r.duration%60)+'分'):''}</div>
+      <div class="record-type">${getRecordTypeName(r)}${r.amount?(' '+r.amount+'ml'):''}${!r.amount&&r.milkType==='breast'&&Number(r.duration)>0?(' · '+r.duration+'分钟'):''}${r.type==='sleep'&&r.duration?(' · '+Math.floor(r.duration/60)+'小时'+(r.duration%60)+'分'):''}</div>
       <div class="record-time">${r.time}${r.note?' · '+r.note:''}</div>
     </div>
     ${r.photo?`<img class="record-photo" src="${r.photo}" onclick="viewPhoto('${r.id}')">`:''}
@@ -981,7 +981,7 @@ function editRecord(id) {
   
   let editTitle = r.type==='feed' ? '编辑喂奶 🍼' : '编辑换尿布 🩲';
     if (r.type==='feed') {
-      if (r.milkType==='breast' && Number(r.duration) > 0 && !r.amount) editTitle = '编辑母乳亲喂 🤱';
+      if (r.milkType==='breast' && !r.amount) editTitle = '编辑母乳亲喂 🤱';
       else if (r.milkType==='breast') editTitle = '编辑母乳瓶喂 🍼';
       else editTitle = '编辑奶粉 🍼';
     }
@@ -997,14 +997,14 @@ function editRecord(id) {
     document.getElementById('milkTypeGroup').style.display = 'none';
     
     if (r.milkType === 'breast') {
-      if (Number(r.duration) > 0 && !r.amount) {
-        // 母乳亲喂：显示左右乳+时长+时间
+      if (!r.amount) {
+        // 母乳亲喂：左右乳+时长+时间
         document.getElementById('amountGroup').style.display = 'none';
         document.getElementById('sideGroup').style.display = 'block';
         document.getElementById('durationGroup').style.display = 'block';
         document.getElementById('durationInput').value = r.duration || '';
       } else {
-        // 母乳瓶喂：显示左右乳+容量+时间
+        // 母乳瓶喂：左右乳+容量+时间
         document.getElementById('amountGroup').style.display = 'block';
         document.getElementById('sideGroup').style.display = 'block';
         document.getElementById('durationGroup').style.display = 'none';
@@ -1056,6 +1056,24 @@ function startBreastTimer() {
     navigator.wakeLock.request('screen').then(wl => { window._wakeLock = wl; }).catch(()=>{});
   }
   render();
+}
+
+function editBreastStart() {
+  const now = new Date();
+  const current = new Date(breastTimerStart);
+  const input = prompt('修改开始时间（格式：YYYY-MM-DD HH:mm）', 
+    current.getFullYear() + '-' + 
+    String(current.getMonth()+1).padStart(2,'0') + '-' +
+    String(current.getDate()).padStart(2,'0') + ' ' +
+    String(current.getHours()).padStart(2,'0') + ':' +
+    String(current.getMinutes()).padStart(2,'0'));
+  if (input) {
+    const parsed = new Date(input.replace(' ', 'T'));
+    if (!isNaN(parsed.getTime())) {
+      breastTimerStart = parsed.getTime();
+      render();
+    }
+  }
 }
 
 function endBreastTimer() {
