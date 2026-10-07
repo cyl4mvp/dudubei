@@ -1047,7 +1047,7 @@ function editRecord(id) {
   let timeVal = r.time || '';
   if (timeVal.includes(' ')) timeVal = timeVal.replace(' ', 'T');
   document.getElementById('timeInput').value = timeVal;
-  document.getElementById('noteInput').value = r.note || '';
+  // noteInput已删除
   
   // 图片
   if (r.photo) {
@@ -1374,7 +1374,7 @@ async function saveRecord() {
       if (!amount || amount<=0) { alert('请输入喂奶剂量'); return; }
     }
   } else hasPoop = currentHasPoop;
-  const note = document.getElementById('noteInput').value.trim();
+  const note = '';
   const duration = currentType==='feed' && currentMilkType==='breast' ? (document.getElementById('durationInput').value || null) : null;
   const records = loadLocal();
   
