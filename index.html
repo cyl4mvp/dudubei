@@ -337,7 +337,7 @@
   <button class="btn btn-feed" onclick="openModal('formula')">🍼 奶粉</button>
   <button class="btn btn-bottle" onclick="openModal('breast-bottle')">🍼 瓶喂</button>
   <button class="btn btn-breast" onclick="toggleBreast()">🤱 母乳</button>
-  <button class="btn btn-diaper" onclick="openModal('diaper')">🩲 片</button>
+  <button class="btn btn-diaper" onclick="openModal('diaper')">🩲 换片</button>
   <button class="btn btn-sleep" onclick="openSleepModal()">😴 睡觉</button>
 </div>
 
@@ -1216,10 +1216,10 @@ function openModal(type) {
     return;
   }
   // 瓶喂模式：奶粉或母乳瓶喂
+  currentHasPoop = false; currentPhoto = null; editingId = null; currentDuration = null;
   if (type === 'formula') { currentType = 'feed'; currentMilkType = 'formula'; }
   else if (type === 'breast-bottle') { currentType = 'feed'; currentMilkType = 'breast'; }
-  else { currentType = type; }
-  currentType = type; currentMilkType = 'formula'; currentHasPoop = false; currentPhoto = null; editingId = null; currentDuration = null;
+  else { currentType = type; currentMilkType = 'formula'; }
   let title = '记录';
   if (type==='formula') title = '奶粉 🍼';
   else if (type==='breast-bottle') title = '母乳瓶喂 🍼';
@@ -1377,7 +1377,7 @@ async function saveRecord() {
     }
   } else hasPoop = currentHasPoop;
   const note = '';
-  const duration = currentType==='feed' && currentMilkType==='breast' ? (document.getElementById('durationInput').value || null) : null;
+  const duration = (currentType==='feed' && currentMilkType==='breast') ? (Number(document.getElementById('durationInput').value) || 0) : null;
   const records = loadLocal();
   
   if (editingId) {
