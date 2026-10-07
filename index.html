@@ -1224,7 +1224,7 @@ function openModal(type) {
     else title = '换片 🩲';
     document.getElementById('modalTitle').textContent = title;
     const isFeedType = (type==='feed' || type==='formula' || type==='breast-bottle');
-    document.getElementById('milkTypeGroup').style.display = isFeedType ? 'block' : 'none';
+    document.getElementById('milkTypeGroup').style.display = (isFeedType && type !== 'formula') ? 'block' : 'none';
     document.getElementById('amountGroup').style.display = isFeedType ? 'block' : 'none';
     document.getElementById('poopGroup').style.display = type==='diaper' ? 'block' : 'none';
     document.getElementById('amountInput').value = '';
