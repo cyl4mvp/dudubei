@@ -367,11 +367,7 @@
     </div>
     <div class="form-group" id="durationGroup" style="display:none;">
       <label>时长 (分钟)</label>
-      <div class="timer-area">
-        <div class="timer-display" id="timerDisplay">00:00</div>
-        <button class="timer-btn" id="timerBtn" onclick="toggleTimer()">开始计时</button>
-      </div>
-      <input type="number" id="durationInput" placeholder="或手动输入分钟数（选填）" inputmode="numeric">
+      <input type="number" id="durationInput" placeholder="请输入分钟数" inputmode="numeric">
       <div class="quick-amounts">
         <button class="quick-tag" onclick="setDuration(5,event)">5分</button>
         <button class="quick-tag" onclick="setDuration(10,event)">10分</button>
@@ -390,10 +386,6 @@
     <div class="form-group">
       <label>时间</label>
       <input type="datetime-local" id="timeInput">
-    </div>
-    <div class="form-group">
-      <label>备注（可选）</label>
-      <input type="text" id="noteInput" placeholder="如：量多/量少、颜色等">
     </div>
     <div class="form-group">
       <label>图片（可选）</label>
