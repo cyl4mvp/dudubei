@@ -124,6 +124,8 @@
   .btn-feed { background: linear-gradient(135deg, #FF8FA3, #FF6B8A); color: #fff; }
   .btn-diaper { background: linear-gradient(135deg, #7CB9E8, #5B9BD5); color: #fff; }
   .btn-sleep { background: linear-gradient(135deg, #B8A9E8, #9B7EDB); color: #fff; }
+  .btn-breast { background: linear-gradient(135deg, #FFB6C1, #FF8FA3); color: #fff; }
+  .btn-bottle { background: linear-gradient(135deg, #FFD3B6, #FFAB76); color: #fff; }
   .btn:active { opacity: 0.85; }
   .photo-viewer { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); z-index: 9999; justify-content: center; align-items: center; }
 .photo-viewer.show { display: flex; }
@@ -280,6 +282,14 @@
 
 <div class="pull-refresh" onclick="pullFromCloud()" id="pullRefresh" style="display:none;">↓ 点击从云端同步最新数据</div>
 
+<div id="breastStatus" style="display:none; margin:12px 20px; background:#FFE4EC; padding:12px 16px; border-radius:12px; align-items:center; gap:12px;">
+  <div style="font-size:28px;">🤱</div>
+  <div>
+    <div class="breast-time" style="font-size:18px; font-weight:700; color:#FF6B8A;">母乳0小时0分钟</div>
+    <div style="font-size:12px; color:#FF8FA3;">点击下方记录喂奶结束</div>
+  </div>
+</div>
+
 <div id="sleepStatus" style="display:none; margin:12px 20px; background:#EDE7F6; padding:12px 16px; border-radius:12px; align-items:center; gap:12px;">
   <div style="font-size:28px;">😴</div>
   <div>
@@ -317,8 +327,10 @@
 <div class="hint">开启云同步后数据存在腾讯云，多人共享不丢失</div>
 
 <div class="bottom-bar">
-  <button class="btn btn-feed" onclick="openModal('feed')">🍼 记录喂奶</button>
-  <button class="btn btn-diaper" onclick="openModal('diaper')">🩲 换尿布</button>
+  <button class="btn btn-feed" onclick="openModal('formula')">🍼 奶粉</button>
+  <button class="btn btn-bottle" onclick="openModal('breast-bottle')">🍼 瓶喂</button>
+  <button class="btn btn-breast" onclick="toggleBreast()">🤱 母乳</button>
+  <button class="btn btn-diaper" onclick="openModal('diaper')">🩲 尿布</button>
   <button class="btn btn-sleep" onclick="openSleepModal()">😴 睡觉</button>
 </div>
 
@@ -602,14 +614,18 @@ function getBabyAge() {
 /* ========== 渲染 ========== */
 function getRecordIcon(r) {
   if (r.type === 'feed') return r.milkType === 'breast' ? '🤱' : '🍼';
-  return r.hasPoop ? '💩' : '🩲';
+  if (r.type === 'diaper') return r.hasPoop ? '💩' : '🩲';
+  if (r.type === 'sleep') return '😴';
+  return '📝';
 }
 function getRecordIconClass(r) {
-  if (r.type === 'feed') return r.milkType;
-  return r.hasPoop ? 'poop' : 'diaper';
+  if (r.type === 'feed') return r.milkType === 'breast' ? 'breast' : 'formula';
+  if (r.type === 'diaper') return r.hasPoop ? 'poop' : 'diaper';
+  if (r.type === 'sleep') return 'sleep';
+  return 'other';
 }
 function getRecordTypeName(r) {
-  if (r.type === 'feed') return r.milkType === 'breast' ? '母乳' : '奶粉';
+  if (r.type === 'feed') return r.milkType === 'breast' ? (Number(r.duration) > 0 ? '母乳亲喂' : '母乳瓶喂') : '奶粉';
   if (r.type === 'diaper') return r.hasPoop ? '换尿布(有粑粑)' : '换尿布';
   if (r.type === 'sleep') return '睡觉';
   return '记录';
@@ -677,7 +693,17 @@ function render() {
   });
   document.getElementById('sleepTotal').textContent = Math.floor(nightSleepMin/60) + 'h' + (nightSleepMin%60) + 'm';
 
-  // 正在睡觉提示
+  // 正在母乳计时提示
+const breastStatusEl = document.getElementById('breastStatus');
+if (breastTimerStart) {
+  const elapsed = Math.round((Date.now() - breastTimerStart) / 60000);
+  breastStatusEl.style.display = 'flex';
+  breastStatusEl.querySelector('.breast-time').textContent = '母乳' + Math.floor(elapsed/60) + '小时' + (elapsed%60) + '分钟';
+} else {
+  breastStatusEl.style.display = 'none';
+}
+
+// 正在睡觉提示
 const activeSleep = records.find(r => r.type === 'sleep' && !r.endTime);
 const sleepStatusEl = document.getElementById('sleepStatus');
 if (activeSleep) {
@@ -704,7 +730,7 @@ function renderRecordItem(r) {
   return `<div class="record-item">
     <div class="record-icon ${getRecordIconClass(r)}">${getRecordIcon(r)}</div>
     <div class="record-info">
-      <div class="record-type">${getRecordTypeName(r)}${r.side&&r.side!=='both'?('·'+(r.side==='left'?'左':'右')):''}${r.amount?(' '+r.amount+'ml'):''}${r.duration?(' · '+r.duration+'分钟'):''}${r.type==='sleep'&&r.duration?(' · '+Math.floor(r.duration/60)+'小时'+(r.duration%60)+'分'):''}</div>
+      <div class="record-type">${getRecordTypeName(r)}${r.amount?(' '+r.amount+'ml'):''}${Number(r.duration)>0&&r.milkType==='breast'?(' · '+r.duration+'分钟'):''}${r.type==='sleep'&&r.duration?(' · '+Math.floor(r.duration/60)+'小时'+(r.duration%60)+'分'):''}</div>
       <div class="record-time">${r.time}${r.note?' · '+r.note:''}</div>
     </div>
     ${r.photo?`<img class="record-photo" src="${r.photo}" onclick="viewPhoto('${r.id}')">`:''}
@@ -953,7 +979,13 @@ function editRecord(id) {
   currentHasPoop = r.hasPoop || false;
   currentPhoto = r.photo || null;
   
-  document.getElementById('modalTitle').textContent = r.type==='feed' ? '编辑喂奶 🍼' : '编辑换尿布 🩲';
+  let editTitle = r.type==='feed' ? '编辑喂奶 🍼' : '编辑换尿布 🩲';
+    if (r.type==='feed') {
+      if (r.milkType==='breast' && Number(r.duration) > 0 && !r.amount) editTitle = '编辑母乳亲喂 🤱';
+      else if (r.milkType==='breast') editTitle = '编辑母乳瓶喂 🍼';
+      else editTitle = '编辑奶粉 🍼';
+    }
+    document.getElementById('modalTitle').textContent = editTitle;
   document.getElementById('milkTypeGroup').style.display = r.type==='feed' ? 'block' : 'none';
   document.getElementById('amountGroup').style.display = r.type==='feed' ? 'block' : 'none';
   document.getElementById('poopGroup').style.display = r.type==='diaper' ? 'block' : 'none';
@@ -961,10 +993,28 @@ function editRecord(id) {
   if (r.type==='feed') {
     document.getElementById('amountInput').value = r.amount || '';
     document.getElementById('durationInput').value = r.duration || '';
-    document.getElementById('optFormula').classList.toggle('active', r.milkType==='formula');
-    document.getElementById('optBreast').classList.toggle('active', r.milkType==='breast');
-    document.getElementById('durationGroup').style.display = r.milkType==='breast' ? 'block' : 'none';
-    document.getElementById('sideGroup').style.display = r.milkType==='breast' ? 'block' : 'none';
+    // 编辑时隐藏奶型选择
+    document.getElementById('milkTypeGroup').style.display = 'none';
+    
+    if (r.milkType === 'breast') {
+      if (Number(r.duration) > 0 && !r.amount) {
+        // 母乳亲喂：显示左右乳+时长+时间
+        document.getElementById('amountGroup').style.display = 'none';
+        document.getElementById('sideGroup').style.display = 'block';
+        document.getElementById('durationGroup').style.display = 'block';
+        document.getElementById('durationInput').value = r.duration || '';
+      } else {
+        // 母乳瓶喂：显示左右乳+容量+时间
+        document.getElementById('amountGroup').style.display = 'block';
+        document.getElementById('sideGroup').style.display = 'block';
+        document.getElementById('durationGroup').style.display = 'none';
+      }
+    } else {
+      // 奶粉：显示容量+时间
+      document.getElementById('amountGroup').style.display = 'block';
+      document.getElementById('sideGroup').style.display = 'none';
+      document.getElementById('durationGroup').style.display = 'none';
+    }
     setSide(r.side || 'left');
   }
   if (r.type==='diaper') {
@@ -990,9 +1040,64 @@ function editRecord(id) {
   
   document.getElementById('modalMask').classList.add('show');
 }
+// 母乳计时
+function toggleBreast() {
+  if (breastTimerStart) {
+    endBreastTimer();
+  } else {
+    startBreastTimer();
+  }
+}
+
+function startBreastTimer() {
+  breastTimerStart = Date.now();
+  breastTimerInterval = setInterval(() => { render(); }, 30000);
+  if (navigator.wakeLock) {
+    navigator.wakeLock.request('screen').then(wl => { window._wakeLock = wl; }).catch(()=>{});
+  }
+  render();
+}
+
+function endBreastTimer() {
+  if (!breastTimerStart) return;
+  const elapsedMin = Math.round((Date.now() - breastTimerStart) / 60000);
+  const now = new Date();
+  const nowStr = now.getFullYear() + '-' + 
+    String(now.getMonth()+1).padStart(2,'0') + '-' +
+    String(now.getDate()).padStart(2,'0') + ' ' +
+    String(now.getHours()).padStart(2,'0') + ':' +
+    String(now.getMinutes()).padStart(2,'0');
+  
+  const records = loadLocal();
+  records.unshift({
+    id: Date.now().toString(),
+    type: 'feed',
+    milkType: 'breast',
+    time: nowStr,
+    amount: null,
+    duration: elapsedMin,
+    side: currentSide || 'left',
+    hasPoop: false,
+    note: '',
+    photo: null,
+    createdAt: new Date().toISOString()
+  });
+  breastTimerStart = null;
+  clearInterval(breastTimerInterval);
+  if (window._wakeLock) { window._wakeLock.release(); window._wakeLock = null; }
+  saveLocal(records);
+  render();
+  if (cloudEnabled) pushToCloud(records);
+  alert('母乳' + elapsedMin + '分钟');
+}
+
 // 睡觉计时
 let sleepStartTime = null;
 let sleepTimerInterval = null;
+
+// 母乳计时（和睡觉一样的逻辑）
+let breastTimerStart = null;
+let breastTimerInterval = null;
 
 function openSleepModal() {
   const records = loadLocal();
@@ -1064,10 +1169,25 @@ function endSleep(sleepRecord) {
 }
 
 function openModal(type) {
+  // 如果正在母乳计时，点母乳就结束
+  if (type === 'breast' && breastTimerStart) {
+    endBreastTimer();
+    return;
+  }
+  // 瓶喂模式：奶粉或母乳瓶喂
+  if (type === 'formula') { currentType = 'feed'; currentMilkType = 'formula'; }
+  else if (type === 'breast-bottle') { currentType = 'feed'; currentMilkType = 'breast'; }
+  else { currentType = type; }
   currentType = type; currentMilkType = 'formula'; currentHasPoop = false; currentPhoto = null; editingId = null; currentDuration = null;
-  document.getElementById('modalTitle').textContent = type==='feed' ? '记录喂奶 🍼' : '换尿布 🩲';
-  document.getElementById('milkTypeGroup').style.display = type==='feed' ? 'block' : 'none';
-  document.getElementById('amountGroup').style.display = type==='feed' ? 'block' : 'none';
+  let title = '记录';
+  if (type==='formula') title = '奶粉 🍼';
+  else if (type==='breast-bottle') title = '母乳瓶喂 🍼';
+  else if (type==='feed') title = '记录喂奶 🍼';
+  else title = '换尿布 🩲';
+  document.getElementById('modalTitle').textContent = title;
+  const isFeedType = (type==='feed' || type==='formula' || type==='breast-bottle');
+  document.getElementById('milkTypeGroup').style.display = isFeedType ? 'block' : 'none';
+  document.getElementById('amountGroup').style.display = isFeedType ? 'block' : 'none';
   document.getElementById('poopGroup').style.display = type==='diaper' ? 'block' : 'none';
   document.getElementById('amountInput').value = '';
   document.getElementById('durationInput').value = '';
