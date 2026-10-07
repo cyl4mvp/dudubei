@@ -676,7 +676,7 @@ function render() {
     } else if (r.type === 'diaper') { dc++; if (r.hasPoop) pc++; }
   });
   // 母乳总量 = 实际ml + 分钟×3
-  const breastTotalMl = bt + bd * 3;
+  const breastTotalMl = bt + bd * 7.5;
   document.getElementById('poopCount').textContent = pc;
   document.getElementById('breastTotal').textContent = Math.round(breastTotalMl);
   document.getElementById('formulaTotal').textContent = ft;
@@ -760,7 +760,7 @@ function renderHistory(records) {
     if (!d) return;
     if (!groups[d]) groups[d] = {bc:0,fc:0,pc:0,bt:0,ft:0,dc:0,items:[]};
     if (r.type==='feed') {
-      if (r.milkType==='breast'){groups[d].bc++;groups[d].bt+=Number(r.amount)||(Number(r.duration)*3)||0;}
+      if (r.milkType==='breast'){groups[d].bc++;groups[d].bt+=Number(r.amount)||(Number(r.duration)*7.5)||0;}
       else{groups[d].fc++;groups[d].ft+=Number(r.amount)||0;}
     } else { groups[d].dc++; if(r.hasPoop) groups[d].pc++; }
     groups[d].items.push(r);
@@ -924,7 +924,7 @@ function renderCalendar() {
     if (!d) return;
     if (!groups[d]) groups[d] = {bt:0,ft:0,dc:0,pc:0,items:[]};
     if (r.type==='feed') {
-      if (r.milkType==='breast') groups[d].bt+=Number(r.amount)||(Number(r.duration)*3)||0;
+      if (r.milkType==='breast') groups[d].bt+=Number(r.amount)||(Number(r.duration)*7.5)||0;
       else groups[d].ft+=Number(r.amount)||0;
     } else { groups[d].dc++; if(r.hasPoop) groups[d].pc++; }
     groups[d].items.push(r);
