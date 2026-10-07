@@ -265,7 +265,7 @@
 <div class="stats" style="grid-template-columns: repeat(5, 1fr);">
   <div class="stat"><div class="num breast" id="breastTotal">0</div><div class="label">母乳(ml)</div></div>
   <div class="stat"><div class="num formula" id="formulaTotal">0</div><div class="label">奶粉(ml)</div></div>
-  <div class="stat"><div class="num diaper" id="diaperCount">0</div><div class="label">换片</div></div>
+  <div class="stat"><div class="num diaper" id="diaperCount">0</div><div class="label">换尿不湿</div></div>
   <div class="stat"><div class="num poop" id="poopCount">0</div><div class="label">粑粑次数</div></div>
   <div class="stat"><div class="num sleep" id="sleepTotal">0h</div><div class="label">夜晚睡觉</div></div>
 </div>
@@ -625,7 +625,7 @@ function getRecordIconClass(r) {
 }
 function getRecordTypeName(r) {
   if (r.type === 'feed') return r.milkType === 'breast' ? (r.amount ? '母乳瓶喂' : '母乳亲喂') : '奶粉';
-  if (r.type === 'diaper') return r.hasPoop ? '换片·有粑粑' : '换片';
+  if (r.type === 'diaper') return '换尿不湿' + (r.hasPoop ? '·有粑粑' : '·无粑粑');
   if (r.type === 'sleep') return '睡觉';
   return '记录';
 }
